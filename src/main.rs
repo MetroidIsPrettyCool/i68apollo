@@ -27,7 +27,11 @@ fn calculate_checksum(data: Vec<u8>) -> u16 {
 fn main() {
     // ---------------startup message---------------
 
-    println!("i68 local component \"apollo\"\n\nExpecting build 29");
+    println!(
+        "i68 local component \"apollo\"\n\nExpecting build {}.{}",
+        env!("CARGO_PKG_VERSION_MAJOR"),
+        env!("CARGO_PKG_VERSION_MINOR")
+    );
 
     // ---------------init cable---------------
 
