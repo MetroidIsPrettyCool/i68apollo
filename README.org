@@ -16,7 +16,7 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
    release compilation profiles, respectively.
 * How to Use
 1. Plug your TI-92 Plus into your computer with a SilverLink USB cable.
-2. Start ~i68soyuz~ on your calculator by following the instructions on that project's repository.
+2. Start ~i68soyuz~ on your calculator by following the instructions in that project's repository.
 3. When prompted to "start apollo", start ~i68apollo~ with either ~cargo run~ or ~cargo run --release~.
 4. Go ahead and "press any key" on your calculator. ~i68apollo~ and ~i68soyuz~ will then exchange version
    information. If there is a version mismatch, both will mutually abort the connection. Otherwise, you should at this
@@ -35,11 +35,12 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
 - If for whatever reason ~i68apollo~ fails to exit when ~i68soyuz~ does, press Control-C in the terminal to force it to
   quit.
 * Additional Notes
-** Quirks and Misdemeanors
+** Quirks and Misdemeanors[fn:4]
 - Because the TI-92 Plus has a somewhat... nonstandard keyboard layout, many of the special keys are not properly
   implemented. Keys like ~SIN~, ~MODE~ or ~^~ instead produce bogus function key presses. Furthermore, combinations like
   2nd+I fail to produce the expected result. This is partially due to the limitations of the Rust uinput crate, and
-  partially due to the limitations of X11's default keymaps. Perhaps future work will address this, perhaps not.
+  partially due to the limitations of X11's (or XKB's, rather) default keyboard configuration. Perhaps future work will
+  address this, perhaps not. Messing with X11 internals gives me the heebie-jeebies.
 ** Future Improvements?
 - I would like to implement some kind of support for the TI PLT-KBD, but due a dearth of documentation this may not be
   possible.[fn:1]
@@ -51,17 +52,20 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
   proceeding.
 - Overall robustness could really use some improving.
 - It'd be desirable if I could roll an XKB configuration for the TI-92 Plus. It'd be really annoying and complicated,
-  especially since it has so many nonstandard KeySyms and multigraphs and modifiers and such but I think it could be
+  especially since it has so many nonstandard KeySyms and multigraphs and modifiers and such, but I think it /could/ be
   done.
 ** The Name
 ~i68apollo~ is named for the Apollo spacecraft used as part of the joint Soviet-American [[https://en.wikipedia.org/wiki/Apollo%E2%80%93Soyuz][Apollo-Soyuz Test Project]]. As I
 am American, and ~i68apollo~ is the "local" component of ~i68~, I named it after the American part of the mission.
 
-~i68soyuz~, the "foreign" component of ~i68~, was named likewise for the Soviet part of the mission.
+~i68soyuz~, the "foreign" component of ~i68~, was named likewise for the Soviet spacecraft.
 * Footnotes
-[fn:3] If you don't know how to use the terminal, then I'm sorry but this project might be little over your head in
-terms of obtuse technical nonsense. That's okay, you probably don't want to run this anyway. If you still do regardless,
-you're probably technically inclined enough to figure it out yourself.
+[fn:4]https://www.youtube.com/watch?v=urcL86UpqZc&t=472s
+
+[fn:3] If you don't know how to use the terminal, then I'm sorry but this might be little over your head. For what it's
+worth, you probably don't really want to run this anyway. It's hacky and gross and brittle and obtuse and unpleasant to
+use, and all for very little benefit. If you still do regardless, you're probably technically inclined enough to figure
+it out yourself.
 
 [fn:2] Alongside ~i68soyuz~, which you can find by scrounging through my GitHub.
 
