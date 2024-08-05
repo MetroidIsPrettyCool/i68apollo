@@ -1,7 +1,9 @@
 * Introduction
-~i68apollo~ is the computer-based component of the two-part ~i68~ (*I*​nput *68*​000) prototype userspace
-driver[fn:2] intended to allow the use of a Texas Instruments TI-92 Plus calculator as an external keyboard under
-Linux. ~i68apollo~ is not intended to work under any other operating system.
+~i68apollo~ is the computer-based component of the two-part ~i68~ (*I*​nput from Motorola *68*​000-based calculator)
+prototype userspace driver intended to allow the use of a Texas Instruments TI-92 Plus calculator as an external
+keyboard under Linux. ~i68apollo~ is not intended to work under any other operating system.
+
+~i68apollo~ requires its sister component ~i68soyuz~ to function, which you can find [[https://github.com/MetroidIsPrettyCool/i68soyuz][here]].
 
 For the time being, ~i68~ requires that the TI-92 Plus be plugged in via a SilverLink cable. No other means are
 supported, including TiEmu. If you want to use ~i68~, get ready to spend money on old hardware.
@@ -11,7 +13,7 @@ already.
 
 If you're unfamiliar with the Rust build process, here's an expedited guide:
 1. Install ~cargo~, like I said
-2. Open a terminal and ~cd~ to the directory you've downloaded/cloned/pulled this repository to.[fn:3]
+2. Open a terminal and ~cd~ to the directory you've downloaded/cloned/pulled this repository to.[fn:2]
 3. Once there, you'll type either ~cargo run~ or ~cargo run --release~ to compile and run with either the debug or
    release compilation profiles, respectively.
 * How to Use
@@ -35,7 +37,7 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
 - If for whatever reason ~i68apollo~ fails to exit when ~i68soyuz~ does, press Control-C in the terminal to force it to
   quit.
 * Additional Notes
-** Quirks and Misdemeanors[fn:4]
+** Quirks and Misdemeanors[fn:3]
 - Because the TI-92 Plus has a somewhat... nonstandard keyboard layout, many of the special keys are not properly
   implemented. Keys like ~SIN~, ~MODE~ or ~^~ instead produce bogus function key presses. Furthermore, combinations like
   ~2nd~+~I~ fail to produce the expected result. This is partially due to the limitations of the Rust uinput crate, and
@@ -60,14 +62,12 @@ am American, and ~i68apollo~ is the "local" component of ~i68~, I named it after
 
 ~i68soyuz~, the "foreign" component of ~i68~, was named likewise for the Soviet spacecraft.
 * Footnotes
-[fn:4]https://www.youtube.com/watch?v=urcL86UpqZc&t=472s
+[fn:3]https://www.youtube.com/watch?v=urcL86UpqZc&t=472s
 
-[fn:3] If you don't know how to use the terminal, then I'm sorry but this might be little over your head. For what it's
+[fn:2] If you don't know how to use the terminal, then I'm sorry but this might be little over your head. For what it's
 worth, you probably don't really want to run this anyway. It's hacky and gross and brittle and obtuse and unpleasant to
 use, and all for very little benefit. If you still do regardless, you're probably technically inclined enough to figure
 it out yourself.
-
-[fn:2] Alongside ~i68soyuz~, which you can find by scrounging through my GitHub.
 
 [fn:1] I think it /should/ be possible to hook the relevant interrupt for link port I/O and the log the tx and rx queues
 to reverse-engineer the protocol, but I have yet to try it. I /think/ it's pretty simple--just sending a remote-control
