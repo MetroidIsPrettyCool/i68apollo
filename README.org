@@ -17,12 +17,14 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
 * How to Use
 1. Plug your TI-92 Plus into your computer with a SilverLink USB cable.
 2. Start ~i68soyuz~ on your calculator by following the instructions on that project's repository.
-3. Start ~i68apollo~ with either ~cargo run~ or ~cargo run --release~.
-4. Go ahead and "press any key" on your calculator. At this point you should be able to type on your computer with your
-   calculator.
+3. When prompted to "start apollo", start ~i68apollo~ with either ~cargo run~ or ~cargo run --release~.
+4. Go ahead and "press any key" on your calculator. ~i68apollo~ and ~i68soyuz~ will then exchange version
+   information. If there is a version mismatch, both will mutually abort the connection. Otherwise, you should at this
+   point be able to type on your computer with your calculator.
 5. Press the ~ON~ key on your calculator at any point to quit.
 * Troubleshooting
-- Ensure that the latest version of ~i68soyuz~ is installed and running on your TI-92 Plus.
+- Ensure that the major (first number) and minor (second number) versions of ~i68apollo~ and ~i68soyuz~ match. If they
+  do not, you must install the up-to-date version of the offending component.
 - If you get an error saying something about being "unable to create virtual keyboard", make sure ~uinput~ is
   running. You can do this by running ~sudo modprobe uinput~ in your terminal.
 - If you get an error about "not being able to find link cable", make sure the link cable is plugged in, and that your
@@ -43,12 +45,10 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
   possible.[fn:1]
 - It'd be nice if the two components could send some configuration information between each other, such as which key
   should be used to exit, or how the calculator should report its key matrix.
-- It'd be nice if ~i68apollo~ could get some version information from ~i68soyuz~, in order to ensure it can quit out in
-  case of an incompatibility.
 - Manually loading ~i68soyuz~ onto the calculator is a pain, it'd be nice if ~i68apollo~ could do that automatically.
-  Could probably be done by loading the calculator's directory, executing ~i68soyuz~ if found, checking its version
-  against a table, and either proceeding if everything passes or else issuing a "silent download" to install the latest
-  version, /then/ proceeding.
+  Could probably be done by loading the calculator's directory, executing ~i68soyuz~ if found, checking its version, and
+  either proceeding if everything passes or else issuing a "silent download" to install the latest version, /then/
+  proceeding.
 - Overall robustness could really use some improving.
 - It'd be desirable if I could roll an XKB configuration for the TI-92 Plus. It'd be really annoying and complicated,
   especially since it has so many nonstandard KeySyms and multigraphs and modifiers and such but I think it could be

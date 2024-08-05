@@ -33,21 +33,17 @@ impl Cable {
         })
     }
 
-    pub fn next_packet(&mut self) -> [u8; 11] {
-        while self.packet_buffer.len() < 11 {
+    pub fn read_bytes(&mut self, bytes: usize, timeout: Duration) -> Vec<u8> {
+        while self.packet_buffer.len() < bytes {
             let mut buf: [u8; 32] = [0; 32];
-            let bytes_read = self
-                .handle
-                .read_bulk(0x81, &mut buf, Duration::from_secs(0))
-                .unwrap();
+            let bytes_read = self.handle.read_bulk(0x81, &mut buf, timeout).unwrap();
             self.packet_buffer.extend_from_slice(&buf[0..bytes_read]);
         }
-        return self
-            .packet_buffer
-            .drain(0..11)
-            .collect::<Vec<u8>>()
-            .try_into()
-            .unwrap();
+        return self.packet_buffer.drain(0..bytes).collect::<Vec<u8>>();
+    }
+
+    pub fn write_bytes(&mut self, bytes: &[u8], timeout: Duration) {
+        let _bytes_written = self.handle.write_bulk(0x02, bytes, timeout).unwrap();
     }
 
     pub fn release(&mut self) -> rusb::Result<()> {

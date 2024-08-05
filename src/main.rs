@@ -25,13 +25,16 @@ fn calculate_checksum(data: Vec<u8>) -> u16 {
 }
 
 fn main() {
+    let apollo_ver_major = u8::from_str_radix(env!("CARGO_PKG_VERSION_MAJOR"), 10)
+        .expect("unable to parse crate major version as u8");
+    let apollo_ver_minor = u8::from_str_radix(env!("CARGO_PKG_VERSION_MINOR"), 10)
+        .expect("unable to parse crate minor version as u8");
+    let apollo_ver_patch = u8::from_str_radix(env!("CARGO_PKG_VERSION_PATCH"), 10)
+        .expect("unable to parse crate patch version as u8");
+
     // ---------------startup message---------------
 
-    println!(
-        "i68 local component \"apollo\"\n\nExpecting build {}.{}.x",
-        env!("CARGO_PKG_VERSION_MAJOR"),
-        env!("CARGO_PKG_VERSION_MINOR")
-    );
+    println!("i68 local component \"apollo\"\n\nVersion: {apollo_ver_major}.{apollo_ver_minor}.{apollo_ver_patch}");
 
     // ---------------init cable---------------
 
@@ -54,6 +57,41 @@ fn main() {
 
     let calc = Calc::TI92P;
 
+    // ---------------wait---------------
+
+    println!("Waiting for soyuz...");
+    let ready_byte = cable.read_bytes(1, Duration::from_secs(0));
+    if ready_byte[0] != 0x50 {
+        println!("Received non-ready signal, aborting");
+        cable.release().expect("Unable to release interface 0"); // in from calc
+        return;
+    }
+    println!("soyuz ready");
+
+    // ---------------version check---------------
+
+    println!("Performing version check...");
+
+    let soyuz_ver = cable.read_bytes(3, Duration::from_secs(0));
+
+    let apollo_ver: [u8; 3] = [apollo_ver_major, apollo_ver_minor, apollo_ver_patch];
+    cable.write_bytes(&apollo_ver, Duration::from_secs(0));
+
+    let soyuz_ver_major = soyuz_ver[0];
+    let soyuz_ver_minor = soyuz_ver[1];
+    let soyuz_ver_patch = soyuz_ver[2];
+
+    println!("soyuz: {soyuz_ver_major}.{soyuz_ver_minor}.{soyuz_ver_patch}");
+    println!("apollo: {apollo_ver_major}.{apollo_ver_minor}.{apollo_ver_patch}");
+
+    if apollo_ver_major != soyuz_ver_major || apollo_ver_minor != soyuz_ver_minor {
+        println!("Version mismatch, aborting");
+        cable.release().expect("Unable to release interface 0"); // in from calc
+        return;
+    }
+
+    println!("Versions match");
+
     // ---------------main loop---------------
 
     println!("Awaiting first packet...");
@@ -66,7 +104,7 @@ fn main() {
 
     loop {
         prev_matrix_state.copy_from_slice(&matrix_state);
-        matrix_state.copy_from_slice(&cable.next_packet());
+        matrix_state.copy_from_slice(&cable.read_bytes(11, Duration::from_secs(0)));
 
         if matrix_state[10] == 1 {
             break;
