@@ -28,7 +28,7 @@ fn main() {
     // ---------------startup message---------------
 
     println!(
-        "i68 local component \"apollo\"\n\nExpecting build {}.{}",
+        "i68 local component \"apollo\"\n\nExpecting build {}.{}.x",
         env!("CARGO_PKG_VERSION_MAJOR"),
         env!("CARGO_PKG_VERSION_MINOR")
     );
