@@ -114,6 +114,8 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
     let devices = rusb::devices().expect("unable to access USB device list");
 
     for device in devices.iter() {
+        println!("Trying device...");
+
         let handle = match device.open() {
             Ok(handle) => handle,
             Err(e) => {
@@ -138,8 +140,10 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
         };
 
         if product_string == "TI-GRAPH LINK USB" {
+            println!("Found SilverLink");
             return Some(handle);
         } else {
+            println!("Device was not SilverLink, skipping");
             continue;
         }
     }
@@ -158,7 +162,13 @@ fn create_virtual_kbd() -> Result<uinput::Device> {
 }
 
 fn main() {
+    // ---------------startup message---------------
+
+    println!("i68 local component \"apollo\"\n\nExpecting build 28");
+
     // ---------------init cable---------------
+
+    println!("Initializing SilverLink cable...");
 
     let cable_handle = get_link_cable().expect("Unable to find link cable, is it plugged in?");
 
@@ -170,11 +180,19 @@ fn main() {
         .claim_interface(0)
         .expect("Unable to claim interface 0");
 
+    println!("SilverLink successfully initialized");
+
     // ---------------init uinput device---------------
+
+    println!("Creating virtual keyboard...");
 
     let mut virtual_kbd = create_virtual_kbd().expect("Unable to create virtual keyboard. Is uinput loaded? Reason");
 
+    println!("Virtual keyboard created");
+
     // ---------------main loop---------------
+
+    println!("Awaiting first packet...");
 
     let mut buf: [u8; 32] = [0; 32];
 
@@ -229,7 +247,7 @@ fn main() {
             }
 
             Err(e) => {
-                println!("Unable to read. Reason: {e}");
+                println!("Unable to read from SilverLink. Reason: {e}");
             }
         }
     }
@@ -240,8 +258,8 @@ fn main() {
         packets,
         secs_since_loop_start,
         packets as f64 / secs_since_loop_start,
-        (packets * 11) as f64 / secs_since_loop_start,
-        (packets * 88) as f64 / secs_since_loop_start
+        (packets * 32) as f64 / secs_since_loop_start,
+        (packets * 32 * 8) as f64 / secs_since_loop_start
     );
 
     cable_handle
