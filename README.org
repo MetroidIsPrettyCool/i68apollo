@@ -1,5 +1,5 @@
 * Introduction
-~i68apollo~ is the computer-based component of the two-part ~i68~ (**I**​nput **68**​000) prototype userspace
+~i68apollo~ is the computer-based component of the two-part ~i68~ (*I*​nput *68*​000) prototype userspace
 driver[fn:2] intended to allow the use of a Texas Instruments TI-92 Plus calculator as an external keyboard under
 Linux. ~i68apollo~ is not intended to work under any other operating system.
 
