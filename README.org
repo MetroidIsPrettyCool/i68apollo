@@ -1,0 +1,72 @@
+* Introduction
+~i68apollo~ is the computer-based component of the two-part ~i68~ (**I**​nput **68**​000) prototype userspace
+driver[fn:2] intended to allow the use of a Texas Instruments TI-92 Plus calculator as an external keyboard under
+Linux. ~i68apollo~ is not intended to work under any other operating system.
+
+For the time being, ~i68~ requires that the TI-92 Plus be plugged in via a SilverLink cable. No other means are
+supported, including TiEmu. If you want to use ~i68~, get ready to spend money on old hardware.
+* Building
+~i68apollo~ is written in Rust and requires standard Rust utilities to compile. Go [[https://www.rust-lang.org/tools/install][here]] to install them, if you haven't
+already.
+
+If you're unfamiliar with the Rust build process, here's an expedited guide:
+1. Install ~cargo~, like I said
+2. Open a terminal and ~cd~ to the directory you've downloaded/cloned/pulled this repository to.[fn:3]
+3. Once there, you'll type either ~cargo run~ or ~cargo run --release~ to compile and run with either the debug or
+   release compilation profiles, respectively.
+* How to Use
+1. Plug your TI-92 Plus into your computer with a SilverLink USB cable.
+2. Start ~i68soyuz~ on your calculator by following the instructions on that project's repository.
+3. Start ~i68apollo~ with either ~cargo run~ or ~cargo run --release~.
+4. Go ahead and "press any key" on your calculator. At this point you should be able to type on your computer with your
+   calculator.
+5. Press the ~ON~ key on your calculator at any point to quit.
+* Troubleshooting
+- Ensure that the latest version of ~i68soyuz~ is installed and running on your TI-92 Plus.
+- If you get an error saying something about being "unable to create virtual keyboard", make sure ~uinput~ is
+  running. You can do this by running ~sudo modprobe uinput~ in your terminal.
+- If you get an error about "not being able to find link cable", make sure the link cable is plugged in, and that your
+  USB ports are functioning correctly. Try running ~lsusb~ to determine if the SilverLink cable is visible to the
+  operating system.
+- If you get an error about something being "busy", make sure you aren't running any other programs that might be trying
+  to access the link cable, like TiLP2 or TI Connect.
+- If for whatever reason ~i68apollo~ fails to exit when ~i68soyuz~ does, press Control-C in the terminal to force it to
+  quit.
+* Additional Notes
+** Quirks and Misdemeanors
+- Because the TI-92 Plus has a somewhat... nonstandard keyboard layout, many of the special keys are not properly
+  implemented. Keys like ~SIN~, ~MODE~ or ~^~ instead produce bogus function key presses. Furthermore, combinations like
+  2nd+I fail to produce the expected result. This is partially due to the limitations of the Rust uinput crate, and
+  partially due to the limitations of X11's default keymaps. Perhaps future work will address this, perhaps not.
+** Future Improvements?
+- I would like to implement some kind of support for the TI PLT-KBD, but due a dearth of documentation this may not be
+  possible.[fn:1]
+- It'd be nice if the two components could send some configuration information between each other, such as which key
+  should be used to exit, or how the calculator should report its key matrix.
+- It'd be nice if ~i68apollo~ could get some version information from ~i68soyuz~, in order to ensure it can quit out in
+  case of an incompatibility.
+- Manually loading ~i68soyuz~ onto the calculator is a pain, it'd be nice if ~i68apollo~ could do that automatically.
+  Could probably be done by loading the calculator's directory, executing ~i68soyuz~ if found, checking its version
+  against a table, and either proceeding if everything passes or else issuing a "silent download" to install the latest
+  version, /then/ proceeding.
+- Overall robustness could really use some improving.
+- It'd be desirable if I could roll an XKB configuration for the TI-92 Plus. It'd be really annoying and complicated,
+  especially since it has so many nonstandard KeySyms and multigraphs and modifiers and such but I think it could be
+  done.
+** The Name
+~i68apollo~ is named for the Apollo spacecraft used as part of the joint Soviet-American [[https://en.wikipedia.org/wiki/Apollo%E2%80%93Soyuz][Apollo-Soyuz Test Project]]. As I
+am American, and ~i68apollo~ is the "local" component of ~i68~, I named it after the American part of the mission.
+
+~i68soyuz~, the "foreign" component of ~i68~, was named likewise for the Soviet part of the mission.
+* Footnotes
+[fn:3] If you don't know how to use the terminal, then I'm sorry but this project might be little over your head in
+terms of obtuse technical nonsense. That's okay, you probably don't want to run this anyway. If you still do regardless,
+you're probably technically inclined enough to figure it out yourself.
+
+[fn:2] Alongside ~i68soyuz~, which you can find by scrounging through my GitHub.
+
+[fn:1] I think it /should/ be possible to hook the relevant interrupt for link port I/O and the log the tx and rx queues
+to reverse-engineer the protocol, but I have yet to try it. I /think/ it's pretty simple--just sending a remote-control
+packet with every keypress--but I haven't been able to get anything working under that assumption. Perhaps the protocol
+is more bidirectional than I knew--the keyboard may require the calculator to identify itself before it can send
+keycodes, or something else entirely. This footnote is entirely speculation.
