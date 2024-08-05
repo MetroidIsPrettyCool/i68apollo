@@ -204,7 +204,7 @@ impl Cable {
 fn main() {
     // ---------------startup message---------------
 
-    println!("i68 local component \"apollo\"\n\nExpecting build 28");
+    println!("i68 local component \"apollo\"\n\nExpecting build 29");
 
     // ---------------init cable---------------
 
