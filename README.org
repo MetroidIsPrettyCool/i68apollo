@@ -53,6 +53,7 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
 - It'd be desirable if I could roll an XKB configuration for the TI-92 Plus. It'd be really annoying and complicated,
   especially since it has so many nonstandard KeySyms and multigraphs and modifiers and such but I think it could be
   done.
+- I should really remove the packet padding. It saturates the SilverLink too quickly.
 ** The Name
 ~i68apollo~ is named for the Apollo spacecraft used as part of the joint Soviet-American [[https://en.wikipedia.org/wiki/Apollo%E2%80%93Soyuz][Apollo-Soyuz Test Project]]. As I
 am American, and ~i68apollo~ is the "local" component of ~i68~, I named it after the American part of the mission.
