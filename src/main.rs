@@ -14,7 +14,7 @@ use uinput::{
     Event,
 };
 
-use i68apollo::{cable::Cable, calc::Calc, keyboard::VirtualKeyboard};
+use i68apollo::{cable::Cable, calc::{ti92p::TI92Plus, Calc, KeyMatrixDelta}, keyboard::VirtualKeyboard};
 
 fn calculate_checksum(data: Vec<u8>) -> u16 {
     let mut checksum: u16 = 0;
@@ -55,7 +55,7 @@ fn main() {
 
     // ---------------init calc---------------
 
-    let calc = Calc::TI92P;
+    let mut calc = TI92Plus::new();
 
     // ---------------wait---------------
 
@@ -97,37 +97,37 @@ fn main() {
     println!("Awaiting first packet...");
 
     let key_matrix_len = calc.get_key_matrix_len();
-
-    let mut matrix_state: [u8; 10] = [0; 10]; // just some arbitrary length that's "big enough"
-    let mut prev_matrix_state: [u8; 10] = [0; 10];
+    let keymap = calc.get_keymap().to_owned();
 
     let loop_start = Instant::now();
     let mut packets = 0;
 
     loop {
-        prev_matrix_state.copy_from_slice(&matrix_state);
-        matrix_state.copy_from_slice(&cable.read_bytes(key_matrix_len, Duration::from_secs(0)));
+        let KeyMatrixDelta {
+            curr: matrix_state,
+            prev: prev_matrix_state,
+        } = calc.read_key_matrix(&mut cable);
 
         if matrix_state[1] & 1 == 1 {
             break;
         }
 
-        for key_to_key_pair in calc.get_keymap() {
+        for key_to_key_pair in keymap.iter() {
             let ((row, col), key_event) = key_to_key_pair;
-            if matrix_state[row as usize] & (1 << col)
-                != prev_matrix_state[row as usize] & (1 << col)
+            if matrix_state[*row as usize] & (1 << *col)
+                != prev_matrix_state[*row as usize] & (1 << *col)
             {
-                if matrix_state[row as usize] & (1 << col) == 0 {
+                if matrix_state[*row as usize] & (1 << *col) == 0 {
                     virtual_kbd
                         .handle
-                        .release(&key_event)
+                        .release(key_event)
                         .expect("Unable to release key!");
 
                     println!("Release {key_event:?}");
                 } else {
                     virtual_kbd
                         .handle
-                        .press(&key_event)
+                        .press(key_event)
                         .expect("Unable to press key!");
 
                     println!("Press {key_event:?}");

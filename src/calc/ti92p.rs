@@ -1,7 +1,13 @@
+use std::time::Duration;
+
 use uinput::event::{
     keyboard::{Key, KeyPad},
     Keyboard,
 };
+
+use crate::cable::Cable;
+
+use super::{Calc, KeyMatrixDelta};
 
 pub const KEY_MATRIX_LEN: usize = 10;
 
@@ -85,3 +91,30 @@ pub const KEY_TO_KEY_MAP: [((u8, u8), Keyboard); 78] = [
     ((9, 0), Keyboard::Key(Key::Minus)),          // -
     ((1, 0), Keyboard::Key(Key::SysRq)), // ON, snuck into an empty spot in the existing key matrix
 ];
+
+pub struct TI92Plus {
+    key_matrix: [u8; KEY_MATRIX_LEN],
+    prev_key_matrix: [u8; KEY_MATRIX_LEN],
+}
+impl <'a> Calc<'a> for TI92Plus {
+    fn get_keymap(&self) -> &[((u8, u8), Keyboard)] {
+        &KEY_TO_KEY_MAP
+    }
+    fn get_key_matrix_len(&self) -> usize {
+        KEY_MATRIX_LEN
+    }
+    fn read_key_matrix(&'a mut self, cable: &mut Cable) -> KeyMatrixDelta<'a> {
+        self.prev_key_matrix.clone_from_slice(&self.key_matrix);
+        self.key_matrix.copy_from_slice(&cable.read_bytes(KEY_MATRIX_LEN, Duration::from_secs(0)));
+
+        KeyMatrixDelta { curr: &self.key_matrix, prev: &self.prev_key_matrix }
+    }
+}
+impl TI92Plus {
+    pub fn new() -> TI92Plus {
+        TI92Plus {
+            key_matrix: [0; KEY_MATRIX_LEN],
+            prev_key_matrix: [0; KEY_MATRIX_LEN],
+        }
+    }
+}
