@@ -13,7 +13,7 @@ use uinput::{
         keyboard::{Key, KeyPad},
         Keyboard,
     },
-    Event, Result,
+    Event,
 };
 
 const KEY_TO_KEY_MAP: [((u8, u8), Keyboard); 78] = [
@@ -95,11 +95,6 @@ const KEY_TO_KEY_MAP: [((u8, u8), Keyboard); 78] = [
     ((9, 1), Keyboard::KeyPad(KeyPad::Enter)),    // ENTER1
     ((9, 0), Keyboard::Key(Key::Minus)),          // -
     ((10, 0), Keyboard::Key(Key::SysRq)),         // ON
-
-                                                  // // tmp
-                                                  // ((0, 3), Keyboard::Key(Key::Z)),       // Hand
-                                                  // ((6, 4), Keyboard::Key(Key::Space)),          // F1
-                                                  // ((7, 6), Keyboard::KeyPad(KeyPad::Enter)),       // APPS
 ];
 
 fn calculate_checksum(data: Vec<u8>) -> u16 {
@@ -150,7 +145,7 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
     return None;
 }
 
-fn create_virtual_kbd() -> Result<uinput::Device> {
+fn create_virtual_kbd() -> uinput::Result<uinput::Device> {
     let mut virtual_kbd = uinput::default()?.name("i68apollo")?;
 
     for key_to_key_pair in KEY_TO_KEY_MAP {
@@ -159,6 +154,51 @@ fn create_virtual_kbd() -> Result<uinput::Device> {
     }
 
     virtual_kbd.create()
+}
+
+struct Cable {
+    handle: DeviceHandle<GlobalContext>,
+    // the SilverLink has its own internal 32-byte buffer, but since our data packets are 11 bytes they don't align and
+    // we need a second buffer to store the raw data
+    packet_buffer: Vec<u8>,
+}
+impl Cable {
+    fn new() -> Result<Cable, String> {
+        let cable_handle = match get_link_cable() {
+            Some(handle) => handle,
+            None => {
+                return Err("unable to find cable. (is it plugged in?)".to_string());
+            }
+        };
+
+        let set_conf_result = cable_handle.set_active_configuration(1);
+        if let Err(e) = set_conf_result {
+            return Err(format!("unable to set active configuration: {e}"));
+        }
+
+        let claim_interface_result = cable_handle.claim_interface(0);
+        if let Err(e) = claim_interface_result {
+            return Err(format!("unable to claim interface: {e}"));
+        }
+
+        Ok(Cable {
+            handle: cable_handle,
+            packet_buffer: Vec::new(),
+        })
+    }
+
+    fn next_packet(&mut self) -> [u8; 11] {
+        while self.packet_buffer.len() < 11 {
+            let mut buf: [u8; 32] = [0; 32];
+            let bytes_read = self.handle.read_bulk(0x81, &mut buf, Duration::from_secs(0)).unwrap();
+            self.packet_buffer.extend_from_slice(&buf[0..bytes_read]);
+        }
+        return self.packet_buffer.drain(0..11).collect::<Vec<u8>>().try_into().unwrap();
+    }
+
+    fn release(&mut self) -> rusb::Result<()> {
+        self.handle.release_interface(0)
+    }
 }
 
 fn main() {
@@ -170,15 +210,7 @@ fn main() {
 
     println!("Initializing SilverLink cable...");
 
-    let cable_handle = get_link_cable().expect("Unable to find link cable, is it plugged in?");
-
-    cable_handle
-        .set_active_configuration(1)
-        .expect("Unable to set active configuration");
-
-    cable_handle
-        .claim_interface(0)
-        .expect("Unable to claim interface 0");
+    let mut cable = Cable::new().expect("Error initializing cable");
 
     println!("SilverLink successfully initialized");
 
@@ -194,8 +226,6 @@ fn main() {
 
     println!("Awaiting first packet...");
 
-    let mut buf: [u8; 32] = [0; 32];
-
     let mut keymap: [u8; 11] = [0; 11];
     let mut prev_keymap: [u8; 11] = [0; 11];
 
@@ -203,53 +233,32 @@ fn main() {
     let mut packets = 0;
 
     loop {
-        match cable_handle.read_bulk(0x81, &mut buf, Duration::from_secs(0)) {
-            Ok(bytes_read) if bytes_read >= 11 => {
-                // for byte in buf[0..10].iter() {
-                //     println!("{:08b}", byte);
-                // }
-                // println!("Break: {}\n", buf[10]);
+        prev_keymap.copy_from_slice(&keymap);
+        keymap.copy_from_slice(&cable.next_packet());
 
-                if buf[10] == 1 {
-                    break;
+        if keymap[10] == 1 {
+            break;
+        }
+
+        for key_to_key_pair in KEY_TO_KEY_MAP {
+            let ((row, col), key_event) = key_to_key_pair;
+            if keymap[row as usize] & (1 << col) != prev_keymap[row as usize] & (1 << col) {
+                if keymap[row as usize] & (1 << col) == 0 {
+                    virtual_kbd
+                        .release(&key_event)
+                        .expect("Unable to release key!");
+
+                    println!("Release {key_event:?}");
+                } else {
+                    virtual_kbd.press(&key_event).expect("Unable to press key!");
+
+                    println!("Press {key_event:?}");
                 }
-
-                prev_keymap.copy_from_slice(&keymap);
-                keymap.copy_from_slice(&buf[0..11]);
-
-                for key_to_key_pair in KEY_TO_KEY_MAP {
-                    let ((row, col), key_event) = key_to_key_pair;
-                    if keymap[row as usize] & (1 << col) != prev_keymap[row as usize] & (1 << col) {
-                        if keymap[row as usize] & (1 << col) == 0 {
-                            virtual_kbd
-                                .release(&key_event)
-                                .expect("Unable to release key!");
-
-                            println!("Release {key_event:?}");
-                        } else {
-                            virtual_kbd.press(&key_event).expect("Unable to press key!");
-
-                            println!("Press {key_event:?}");
-                        }
-                    }
-                }
-                virtual_kbd.synchronize().expect("Unable to synchronize");
-
-                packets += 1;
-            }
-
-            Ok(bytes_read) if bytes_read == 0 => (),
-
-            Ok(bytes_read) => {
-                // println!("unknown response: {bytes_read} bytes read: {buf:#04X?}");
-                println!("malformed packet ({bytes_read} bytes read)! ignored");
-                break;
-            }
-
-            Err(e) => {
-                println!("Unable to read from SilverLink. Reason: {e}");
             }
         }
+        virtual_kbd.synchronize().expect("Unable to synchronize");
+
+        packets += 1;
     }
 
     let secs_since_loop_start = Instant::now().duration_since(loop_start).as_secs_f64();
@@ -258,11 +267,10 @@ fn main() {
         packets,
         secs_since_loop_start,
         packets as f64 / secs_since_loop_start,
-        (packets * 32) as f64 / secs_since_loop_start,
-        (packets * 32 * 8) as f64 / secs_since_loop_start
+        (packets * 11) as f64 / secs_since_loop_start,
+        (packets * 11 * 8) as f64 / secs_since_loop_start
     );
 
-    cable_handle
-        .release_interface(0)
+    cable.release()
         .expect("Unable to release interface 0"); // in from calc
 }
