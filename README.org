@@ -38,7 +38,7 @@ If you're unfamiliar with the Rust build process, here's an expedited guide:
 ** Quirks and Misdemeanors[fn:4]
 - Because the TI-92 Plus has a somewhat... nonstandard keyboard layout, many of the special keys are not properly
   implemented. Keys like ~SIN~, ~MODE~ or ~^~ instead produce bogus function key presses. Furthermore, combinations like
-  2nd+I fail to produce the expected result. This is partially due to the limitations of the Rust uinput crate, and
+  ~2nd~+~I~ fail to produce the expected result. This is partially due to the limitations of the Rust uinput crate, and
   partially due to the limitations of X11's (or XKB's, rather) default keyboard configuration. Perhaps future work will
   address this, perhaps not. Messing with X11 internals gives me the heebie-jeebies.
 ** Future Improvements?
