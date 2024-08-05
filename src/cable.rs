@@ -88,5 +88,5 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
             continue;
         }
     }
-    return None;
+    None
 }

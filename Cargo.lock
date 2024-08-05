@@ -56,7 +56,7 @@ checksum = "8f5f3913fa0bfe7ee1fd8248b6b9f42a5af4b9d65ec2dd2c3c26132b950ecfc2"
 
 [[package]]
 name = "i68apollo"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "rusb",
  "uinput",

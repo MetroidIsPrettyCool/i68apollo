@@ -3,6 +3,8 @@ use uinput::event::{
     Keyboard,
 };
 
+pub const KEY_MATRIX_LEN: usize = 10;
+
 pub const KEY_TO_KEY_MAP: [((u8, u8), Keyboard); 78] = [
     ((0, 7), Keyboard::Key(Key::Down)),           // Down
     ((0, 6), Keyboard::Key(Key::Right)),          // Right
@@ -81,5 +83,5 @@ pub const KEY_TO_KEY_MAP: [((u8, u8), Keyboard); 78] = [
     ((9, 2), Keyboard::Key(Key::A)),              // A
     ((9, 1), Keyboard::KeyPad(KeyPad::Enter)),    // ENTER1
     ((9, 0), Keyboard::Key(Key::Minus)),          // -
-    ((10, 0), Keyboard::Key(Key::SysRq)),         // ON
+    ((1, 0), Keyboard::Key(Key::SysRq)), // ON, snuck into an empty spot in the existing key matrix
 ];

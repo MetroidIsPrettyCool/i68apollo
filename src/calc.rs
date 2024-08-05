@@ -11,4 +11,9 @@ impl Calc {
             Calc::TI92P => ti92p::KEY_TO_KEY_MAP,
         }
     }
+    pub fn get_key_matrix_len(&self) -> usize {
+        match self {
+            Calc::TI92P => ti92p::KEY_MATRIX_LEN,
+        }
+    }
 }

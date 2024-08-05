@@ -96,17 +96,19 @@ fn main() {
 
     println!("Awaiting first packet...");
 
-    let mut matrix_state: [u8; 11] = [0; 11];
-    let mut prev_matrix_state: [u8; 11] = [0; 11];
+    let key_matrix_len = calc.get_key_matrix_len();
+
+    let mut matrix_state: [u8; 10] = [0; 10]; // just some arbitrary length that's "big enough"
+    let mut prev_matrix_state: [u8; 10] = [0; 10];
 
     let loop_start = Instant::now();
     let mut packets = 0;
 
     loop {
         prev_matrix_state.copy_from_slice(&matrix_state);
-        matrix_state.copy_from_slice(&cable.read_bytes(11, Duration::from_secs(0)));
+        matrix_state.copy_from_slice(&cable.read_bytes(key_matrix_len, Duration::from_secs(0)));
 
-        if matrix_state[10] == 1 {
+        if matrix_state[1] & 1 == 1 {
             break;
         }
 
@@ -146,8 +148,8 @@ fn main() {
         packets,
         secs_since_loop_start,
         packets as f64 / secs_since_loop_start,
-        (packets * 11) as f64 / secs_since_loop_start,
-        (packets * 11 * 8) as f64 / secs_since_loop_start
+        (packets * key_matrix_len) as f64 / secs_since_loop_start,
+        (packets * key_matrix_len * 8) as f64 / secs_since_loop_start
     );
 
     cable.release().expect("Unable to release interface 0"); // in from calc
