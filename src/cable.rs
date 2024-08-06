@@ -48,7 +48,7 @@ impl Cable {
         })
     }
 
-    pub fn read_bytes(&mut self, bytes_expected: usize, timeout: Duration) -> Vec<u8> {
+    pub fn read_bytes(&mut self, bytes_expected: usize, timeout: Duration, attempt_repair: bool) -> Vec<u8> {
         let mut bytes_read = 0;
 
         while self.packet_buffer.len() < bytes_expected {
@@ -61,7 +61,7 @@ impl Cable {
             self.packet_buffer.extend_from_slice(&buf[0..read_size]);
         }
 
-        if bytes_read > bytes_expected {
+        if attempt_repair && bytes_read > bytes_expected {
             let discrepancy = bytes_read - bytes_expected;
             println!("Possible desync. More bytes read than expected ({discrepancy}). Attempting repair.");
             self.packet_buffer.drain(0..discrepancy);

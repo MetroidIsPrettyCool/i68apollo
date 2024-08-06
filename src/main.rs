@@ -60,7 +60,7 @@ fn main() {
     // ---------------wait---------------
 
     println!("Waiting for soyuz...");
-    let ready_byte = cable.read_bytes(1, Duration::from_secs(0));
+    let ready_byte = cable.read_bytes(1, Duration::from_secs(0), false);
     if ready_byte[0] != 0x50 {
         println!("Received non-ready signal, aborting");
         cable.release().expect("Unable to release interface 0"); // in from calc
@@ -72,7 +72,7 @@ fn main() {
 
     println!("Performing version check...");
 
-    let soyuz_ver = cable.read_bytes(3, Duration::from_secs(0));
+    let soyuz_ver = cable.read_bytes(3, Duration::from_secs(0), false);
 
     let apollo_ver: [u8; 3] = [apollo_ver_major, apollo_ver_minor, apollo_ver_patch];
     cable.write_bytes(&apollo_ver, Duration::from_secs(0));

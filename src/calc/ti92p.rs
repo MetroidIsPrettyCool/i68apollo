@@ -105,7 +105,7 @@ impl <'a> Calc<'a> for TI92Plus {
     }
     fn read_key_matrix(&'a mut self, cable: &mut Cable) -> KeyMatrixDelta<'a> {
         self.prev_key_matrix.clone_from_slice(&self.key_matrix);
-        self.key_matrix.copy_from_slice(&cable.read_bytes(KEY_MATRIX_LEN, Duration::from_secs(0)));
+        self.key_matrix.copy_from_slice(&cable.read_bytes(KEY_MATRIX_LEN, Duration::from_secs(0), true));
 
         KeyMatrixDelta { curr: &self.key_matrix, prev: &self.prev_key_matrix }
     }
