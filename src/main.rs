@@ -108,6 +108,8 @@ fn main() {
             prev: prev_matrix_state,
         } = calc.read_key_matrix(&mut cable);
 
+        println!("bytes read overall: {}", cable.bytes_read_overall());
+
         if matrix_state[1] & 1 == 1 {
             break;
         }
