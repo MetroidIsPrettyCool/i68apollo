@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cable::Cable;
-use calc::{ti92p::TI92Plus, Calc, KeyMatrixDelta};
+use calc::{ti92p::TI92Plus, Calc};
 use keyboard::{CalcKey, VirtualKeyboard};
 
 pub mod cable;

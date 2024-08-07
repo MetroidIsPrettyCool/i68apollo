@@ -1,12 +1,8 @@
 use std::time::Duration;
 
-use uinput::event::{
-    Keyboard,
-};
-
 use crate::{cable::Cable, keyboard::CalcKey};
 
-use super::{Calc, KeyMatrixDelta};
+use super::Calc;
 
 pub const KEY_MATRIX_LEN: usize = 10;
 
@@ -95,25 +91,7 @@ pub struct TI92Plus {
     key_matrix: [u8; KEY_MATRIX_LEN],
     prev_key_matrix: [u8; KEY_MATRIX_LEN],
 }
-impl<'a> Calc<'a> for TI92Plus {
-    fn get_key_matrix_len(&self) -> usize {
-        KEY_MATRIX_LEN
-    }
-
-    fn read_key_matrix(&'a mut self, cable: &mut Cable) -> KeyMatrixDelta<'a> {
-        self.prev_key_matrix.clone_from_slice(&self.key_matrix);
-        self.key_matrix.copy_from_slice(&cable.read_bytes(
-            KEY_MATRIX_LEN,
-            Duration::from_secs(0),
-            true,
-        ));
-
-        KeyMatrixDelta {
-            curr: &self.key_matrix,
-            prev: &self.prev_key_matrix,
-        }
-    }
-
+impl Calc for TI92Plus {
     fn get_keys(&mut self, cable: &mut Cable) -> Vec<(crate::keyboard::CalcKey, bool)> {
         self.prev_key_matrix.clone_from_slice(&self.key_matrix);
         self.key_matrix.copy_from_slice(&cable.read_bytes(

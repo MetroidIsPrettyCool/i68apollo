@@ -143,3 +143,11 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
     }
     None
 }
+
+// fn calculate_checksum(data: Vec<u8>) -> u16 {
+//     let mut checksum: u16 = 0;
+//     for byte in data {
+//         checksum = checksum.wrapping_add(byte as u16);
+//     }
+//     checksum
+// }
