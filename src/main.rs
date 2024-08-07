@@ -1,11 +1,7 @@
 use std::time::Instant;
 
 use i68apollo::{
-    apollo_version,
-    cable::Cable,
-    calc::ti92p::TI92Plus,
-    handshake,
-    keyboard::VirtualKeyboard, run,
+    apollo_version, cable::Cable, calc::ti92p::TI92Plus, handshake, keyboard::VirtualKeyboard, run,
 };
 
 fn main() {

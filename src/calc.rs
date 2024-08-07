@@ -1,6 +1,6 @@
 use uinput::event::Keyboard;
 
-use crate::cable::Cable;
+use crate::{cable::Cable, keyboard::CalcKey};
 
 pub mod ti92p;
 
@@ -18,7 +18,8 @@ pub struct KeyMatrixDelta<'a> {
 }
 
 pub trait Calc<'a> {
-    fn get_keymap(&self) -> &[((usize, u8), Keyboard)];
     fn get_key_matrix_len(&self) -> usize;
     fn read_key_matrix(&'a mut self, cable: &mut Cable) -> KeyMatrixDelta<'a>;
+
+    fn get_keys(&mut self, cable: &mut Cable) -> Vec<(CalcKey, bool)>;
 }

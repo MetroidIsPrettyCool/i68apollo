@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use cable::Cable;
 use calc::{ti92p::TI92Plus, Calc, KeyMatrixDelta};
-use keyboard::VirtualKeyboard;
+use keyboard::{CalcKey, VirtualKeyboard};
 
 pub mod cable;
 pub mod calc;
@@ -53,36 +53,18 @@ pub fn handshake(cable: &mut Cable) {
 }
 
 pub fn run(cable: &mut Cable, calc: &mut TI92Plus, virtual_kbd: &mut VirtualKeyboard) {
-    let keymap = calc.get_keymap().to_owned();
+    'outer: loop {
+        for keystate in calc.get_keys(cable) {
+            let (key, pressed) = keystate;
 
-    loop {
-        let KeyMatrixDelta {
-            curr: matrix_state,
-            prev: prev_matrix_state,
-        } = calc.read_key_matrix(cable);
+            if key == CalcKey::ON && pressed {
+                break 'outer;
+            }
 
-        if matrix_state[1] & 1 == 1 {
-            break;
-        }
-
-        for key_to_key_pair in &keymap {
-            let ((row, col), key_event) = key_to_key_pair;
-            if matrix_state[*row] & (1 << *col) != prev_matrix_state[*row] & (1 << *col) {
-                if matrix_state[*row] & (1 << *col) == 0 {
-                    virtual_kbd
-                        .handle
-                        .release(key_event)
-                        .expect("Unable to release key!");
-
-                    println!("Release {key_event:?}");
-                } else {
-                    virtual_kbd
-                        .handle
-                        .press(key_event)
-                        .expect("Unable to press key!");
-
-                    println!("Press {key_event:?}");
-                }
+            if pressed {
+                virtual_kbd.press_key(&key);
+            } else {
+                virtual_kbd.release_key(&key);
             }
         }
 

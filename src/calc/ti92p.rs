@@ -1,95 +1,94 @@
 use std::time::Duration;
 
 use uinput::event::{
-    keyboard::{Key, KeyPad},
     Keyboard,
 };
 
-use crate::cable::Cable;
+use crate::{cable::Cable, keyboard::CalcKey};
 
 use super::{Calc, KeyMatrixDelta};
 
 pub const KEY_MATRIX_LEN: usize = 10;
 
-pub const KEY_TO_KEY_MAP: [((usize, u8), Keyboard); 78] = [
-    ((0, 7), Keyboard::Key(Key::Down)),           // Down
-    ((0, 6), Keyboard::Key(Key::Right)),          // Right
-    ((0, 5), Keyboard::Key(Key::Up)),             // Up
-    ((0, 4), Keyboard::Key(Key::Left)),           // Left
-    ((0, 3), Keyboard::Key(Key::LeftMeta)),       // Hand
-    ((0, 2), Keyboard::Key(Key::LeftShift)),      // Shift
-    ((0, 1), Keyboard::Key(Key::LeftControl)),    // Diamnd
-    ((0, 0), Keyboard::Key(Key::LeftAlt)),        // 2nd
-    ((1, 7), Keyboard::Key(Key::_3)),             // 3
-    ((1, 6), Keyboard::Key(Key::_2)),             // 2
-    ((1, 5), Keyboard::Key(Key::_1)),             // 1
-    ((1, 4), Keyboard::Key(Key::F8)),             // F8
-    ((1, 3), Keyboard::Key(Key::W)),              // W
-    ((1, 2), Keyboard::Key(Key::S)),              // S
-    ((1, 1), Keyboard::Key(Key::Z)),              // Z
-    ((2, 7), Keyboard::Key(Key::_6)),             // 6
-    ((2, 6), Keyboard::Key(Key::_5)),             // 5
-    ((2, 5), Keyboard::Key(Key::_4)),             // 4
-    ((2, 4), Keyboard::Key(Key::F3)),             // F3
-    ((2, 3), Keyboard::Key(Key::E)),              // E
-    ((2, 2), Keyboard::Key(Key::D)),              // D
-    ((2, 1), Keyboard::Key(Key::X)),              // X
-    ((3, 7), Keyboard::Key(Key::_9)),             // 9
-    ((3, 6), Keyboard::Key(Key::_8)),             // 8
-    ((3, 5), Keyboard::Key(Key::_7)),             // 7
-    ((3, 4), Keyboard::Key(Key::F7)),             // F7
-    ((3, 3), Keyboard::Key(Key::R)),              // R
-    ((3, 2), Keyboard::Key(Key::F)),              // F
-    ((3, 1), Keyboard::Key(Key::C)),              // C
-    ((3, 0), Keyboard::Key(Key::F24)),            // STO
-    ((4, 7), Keyboard::Key(Key::Comma)),          // ,
-    ((4, 6), Keyboard::Key(Key::RightBrace)),     // )
-    ((4, 5), Keyboard::Key(Key::LeftBrace)),      // (
-    ((4, 4), Keyboard::Key(Key::F2)),             // F2
-    ((4, 3), Keyboard::Key(Key::T)),              // T
-    ((4, 2), Keyboard::Key(Key::G)),              // G
-    ((4, 1), Keyboard::Key(Key::V)),              // V
-    ((4, 0), Keyboard::Key(Key::Space)),          // Space
-    ((5, 7), Keyboard::Key(Key::F23)),            // TAN
-    ((5, 6), Keyboard::Key(Key::F22)),            // COS
-    ((5, 5), Keyboard::Key(Key::F21)),            // SIN
-    ((5, 4), Keyboard::Key(Key::F6)),             // F6
-    ((5, 3), Keyboard::Key(Key::Y)),              // Y
-    ((5, 2), Keyboard::Key(Key::H)),              // H
-    ((5, 1), Keyboard::Key(Key::B)),              // B
-    ((5, 0), Keyboard::Key(Key::Slash)),          // /
-    ((6, 7), Keyboard::Key(Key::P)),              // P
-    ((6, 6), Keyboard::Key(Key::LineFeed)),       // ENTER2
-    ((6, 5), Keyboard::Key(Key::F20)),            // LN
-    ((6, 4), Keyboard::Key(Key::F1)),             // F1
-    ((6, 3), Keyboard::Key(Key::U)),              // U
-    ((6, 2), Keyboard::Key(Key::J)),              // J
-    ((6, 1), Keyboard::Key(Key::N)),              // N
-    ((6, 0), Keyboard::Key(Key::F19)),            // ^
-    ((7, 7), Keyboard::KeyPad(KeyPad::Asterisk)), // *
-    ((7, 6), Keyboard::Key(Key::F18)),            // APPS
-    ((7, 5), Keyboard::Key(Key::F17)),            // CLEAR
-    ((7, 4), Keyboard::Key(Key::F5)),             // F5
-    ((7, 3), Keyboard::Key(Key::I)),              // I
-    ((7, 2), Keyboard::Key(Key::K)),              // K
-    ((7, 1), Keyboard::Key(Key::M)),              // M
-    ((7, 0), Keyboard::Key(Key::Equal)),          // =
-    ((8, 6), Keyboard::Key(Key::Esc)),            // ESC
-    ((8, 5), Keyboard::Key(Key::F16)),            // MODE
-    ((8, 4), Keyboard::KeyPad(KeyPad::Plus)),     // +
-    ((8, 3), Keyboard::Key(Key::O)),              // O
-    ((8, 2), Keyboard::Key(Key::L)),              // L
-    ((8, 1), Keyboard::Key(Key::F15)),            // θ
-    ((8, 0), Keyboard::Key(Key::BackSpace)),      // BckSpc
-    ((9, 7), Keyboard::KeyPad(KeyPad::Minus)),    // (-)
-    ((9, 6), Keyboard::Key(Key::Dot)),            // .
-    ((9, 5), Keyboard::Key(Key::_0)),             // 0
-    ((9, 4), Keyboard::Key(Key::F4)),             // F4
-    ((9, 3), Keyboard::Key(Key::Q)),              // Q
-    ((9, 2), Keyboard::Key(Key::A)),              // A
-    ((9, 1), Keyboard::KeyPad(KeyPad::Enter)),    // ENTER1
-    ((9, 0), Keyboard::Key(Key::Minus)),          // -
-    ((1, 0), Keyboard::Key(Key::SysRq)), // ON, snuck into an empty spot in the existing key matrix
+pub const KEY_TO_KEY_MAP: [((usize, u8), CalcKey); 78] = [
+    ((0, 7), CalcKey::CursorDown),
+    ((0, 6), CalcKey::CursorRight),
+    ((0, 5), CalcKey::CursorUp),
+    ((0, 4), CalcKey::CursorLeft),
+    ((0, 3), CalcKey::Hand),
+    ((0, 2), CalcKey::Shift),
+    ((0, 1), CalcKey::Diamond),
+    ((0, 0), CalcKey::_2nd),
+    ((1, 7), CalcKey::_3),
+    ((1, 6), CalcKey::_2),
+    ((1, 5), CalcKey::_1),
+    ((1, 4), CalcKey::F8),
+    ((1, 3), CalcKey::W),
+    ((1, 2), CalcKey::S),
+    ((1, 1), CalcKey::Z),
+    ((2, 7), CalcKey::_6),
+    ((2, 6), CalcKey::_5),
+    ((2, 5), CalcKey::_4),
+    ((2, 4), CalcKey::F3),
+    ((2, 3), CalcKey::E),
+    ((2, 2), CalcKey::D),
+    ((2, 1), CalcKey::X),
+    ((3, 7), CalcKey::_9),
+    ((3, 6), CalcKey::_8),
+    ((3, 5), CalcKey::_7),
+    ((3, 4), CalcKey::F7),
+    ((3, 3), CalcKey::R),
+    ((3, 2), CalcKey::F),
+    ((3, 1), CalcKey::C),
+    ((3, 0), CalcKey::STO),
+    ((4, 7), CalcKey::Comma),
+    ((4, 6), CalcKey::RightParenthesis),
+    ((4, 5), CalcKey::LeftParenthesis),
+    ((4, 4), CalcKey::F2),
+    ((4, 3), CalcKey::T),
+    ((4, 2), CalcKey::G),
+    ((4, 1), CalcKey::V),
+    ((4, 0), CalcKey::Space),
+    ((5, 7), CalcKey::TAN),
+    ((5, 6), CalcKey::COS),
+    ((5, 5), CalcKey::SIN),
+    ((5, 4), CalcKey::F6),
+    ((5, 3), CalcKey::Y),
+    ((5, 2), CalcKey::H),
+    ((5, 1), CalcKey::B),
+    ((5, 0), CalcKey::Division),
+    ((6, 7), CalcKey::P),
+    ((6, 6), CalcKey::ENTER2),
+    ((6, 5), CalcKey::LN),
+    ((6, 4), CalcKey::F1),
+    ((6, 3), CalcKey::U),
+    ((6, 2), CalcKey::J),
+    ((6, 1), CalcKey::N),
+    ((6, 0), CalcKey::Exponentiation),
+    ((7, 7), CalcKey::Multiplication),
+    ((7, 6), CalcKey::APPS),
+    ((7, 5), CalcKey::CLEAR),
+    ((7, 4), CalcKey::F5),
+    ((7, 3), CalcKey::I),
+    ((7, 2), CalcKey::K),
+    ((7, 1), CalcKey::M),
+    ((7, 0), CalcKey::Equals),
+    ((8, 6), CalcKey::ESC),
+    ((8, 5), CalcKey::MODE),
+    ((8, 4), CalcKey::Addition),
+    ((8, 3), CalcKey::O),
+    ((8, 2), CalcKey::L),
+    ((8, 1), CalcKey::Theta),
+    ((8, 0), CalcKey::BckSpc),
+    ((9, 7), CalcKey::Negative),
+    ((9, 6), CalcKey::Period),
+    ((9, 5), CalcKey::_0),
+    ((9, 4), CalcKey::F4),
+    ((9, 3), CalcKey::Q),
+    ((9, 2), CalcKey::A),
+    ((9, 1), CalcKey::ENTER1),
+    ((9, 0), CalcKey::Subtraction),
+    ((1, 0), CalcKey::ON),
 ];
 
 pub struct TI92Plus {
@@ -97,10 +96,6 @@ pub struct TI92Plus {
     prev_key_matrix: [u8; KEY_MATRIX_LEN],
 }
 impl<'a> Calc<'a> for TI92Plus {
-    fn get_keymap(&self) -> &[((usize, u8), Keyboard)] {
-        &KEY_TO_KEY_MAP
-    }
-
     fn get_key_matrix_len(&self) -> usize {
         KEY_MATRIX_LEN
     }
@@ -117,6 +112,30 @@ impl<'a> Calc<'a> for TI92Plus {
             curr: &self.key_matrix,
             prev: &self.prev_key_matrix,
         }
+    }
+
+    fn get_keys(&mut self, cable: &mut Cable) -> Vec<(crate::keyboard::CalcKey, bool)> {
+        self.prev_key_matrix.clone_from_slice(&self.key_matrix);
+        self.key_matrix.copy_from_slice(&cable.read_bytes(
+            KEY_MATRIX_LEN,
+            Duration::from_secs(0),
+            true,
+        ));
+
+        let mut keys = Vec::new();
+
+        for key_to_key_pair in KEY_TO_KEY_MAP {
+            let ((row, col), key) = key_to_key_pair;
+            if self.key_matrix[row] & (1 << col) != self.prev_key_matrix[row] & (1 << col) {
+                if self.key_matrix[row] & (1 << col) == 0 {
+                    keys.push((key, false));
+                } else {
+                    keys.push((key, true));
+                }
+            }
+        }
+
+        keys
     }
 }
 impl TI92Plus {
