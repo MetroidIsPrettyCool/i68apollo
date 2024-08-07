@@ -11,7 +11,7 @@ use super::{Calc, KeyMatrixDelta};
 
 pub const KEY_MATRIX_LEN: usize = 10;
 
-pub const KEY_TO_KEY_MAP: [((u8, u8), Keyboard); 78] = [
+pub const KEY_TO_KEY_MAP: [((usize, u8), Keyboard); 78] = [
     ((0, 7), Keyboard::Key(Key::Down)),           // Down
     ((0, 6), Keyboard::Key(Key::Right)),          // Right
     ((0, 5), Keyboard::Key(Key::Up)),             // Up
@@ -97,7 +97,7 @@ pub struct TI92Plus {
     prev_key_matrix: [u8; KEY_MATRIX_LEN],
 }
 impl<'a> Calc<'a> for TI92Plus {
-    fn get_keymap(&self) -> &[((u8, u8), Keyboard)] {
+    fn get_keymap(&self) -> &[((usize, u8), Keyboard)] {
         &KEY_TO_KEY_MAP
     }
 
