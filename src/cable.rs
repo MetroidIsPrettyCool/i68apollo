@@ -16,6 +16,9 @@ pub struct Cable {
     packet_buffer: Vec<u8>,
 
     bytes_read_overall: usize,
+
+    malformed_reads: u64,
+    overreads: u64,
 }
 impl Cable {
     pub fn new() -> Result<Cable, String> {
@@ -45,6 +48,8 @@ impl Cable {
             handle: cable_handle,
             packet_buffer: Vec::new(),
             bytes_read_overall: 0,
+            malformed_reads: 0,
+            overreads: 0,
         })
     }
 
@@ -62,9 +67,17 @@ impl Cable {
         }
 
         if attempt_repair && bytes_read > bytes_expected {
+            self.overreads += 1;
+
             let discrepancy = bytes_read - bytes_expected;
-            println!("Possible desync. More bytes read than expected ({discrepancy}). Attempting repair.");
-            self.packet_buffer.drain(0..discrepancy);
+            if bytes_read % bytes_expected == 0 {
+                println!("More bytes read than expected ({discrepancy}). Likely multiple packets, ignoring.");
+            } else {
+                self.malformed_reads += 1;
+
+                println!("More bytes read than expected ({discrepancy}). Possible desync, attempting repair.");
+                self.packet_buffer.drain(0..discrepancy);
+            }
         }
 
         return self.packet_buffer.drain(0..bytes_expected).collect::<Vec<u8>>();
@@ -80,6 +93,14 @@ impl Cable {
 
     pub fn bytes_read_overall(&self) -> usize {
         self.bytes_read_overall
+    }
+
+    pub fn malformed_reads(&self) -> u64 {
+        self.malformed_reads
+    }
+
+    pub fn overreads(&self) -> u64 {
+        self.overreads
     }
 }
 

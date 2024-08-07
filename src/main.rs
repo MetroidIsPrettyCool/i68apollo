@@ -108,8 +108,6 @@ fn main() {
             prev: prev_matrix_state,
         } = calc.read_key_matrix(&mut cable);
 
-        println!("bytes read overall: {}", cable.bytes_read_overall());
-
         if matrix_state[1] & 1 == 1 {
             break;
         }
@@ -146,12 +144,16 @@ fn main() {
 
     let secs_since_loop_start = Instant::now().duration_since(loop_start).as_secs_f64();
     println!(
-        "\n{} packets in {:.2} seconds\n{:.2} packets/sec, {:.2} bytes/sec, or {:.2} baud",
+        "\n{} packets in {:.2} seconds or {:.2} packets/sec",
         packets,
         secs_since_loop_start,
         packets as f64 / secs_since_loop_start,
-        (packets * key_matrix_len) as f64 / secs_since_loop_start,
-        (packets * key_matrix_len * 8) as f64 / secs_since_loop_start
+    );
+
+    println!("bytes read: {}, overreads: {}, malformed reads: {}",
+             cable.bytes_read_overall(),
+             cable.overreads(),
+             cable.malformed_reads()
     );
 
     cable.release().expect("Unable to release interface 0"); // in from calc
