@@ -1,3 +1,4 @@
+[[./i68logo.png]]
 * Introduction
 ~i68apollo~ is the computer-based component of the two-part ~i68~ (*I*​nput from Motorola *68*​000-based calculator)
 prototype userspace driver intended to allow the use of a Texas Instruments TI-92 Plus calculator as an external
