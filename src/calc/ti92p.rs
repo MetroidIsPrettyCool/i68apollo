@@ -96,18 +96,27 @@ pub struct TI92Plus {
     key_matrix: [u8; KEY_MATRIX_LEN],
     prev_key_matrix: [u8; KEY_MATRIX_LEN],
 }
-impl <'a> Calc<'a> for TI92Plus {
+impl<'a> Calc<'a> for TI92Plus {
     fn get_keymap(&self) -> &[((u8, u8), Keyboard)] {
         &KEY_TO_KEY_MAP
     }
+
     fn get_key_matrix_len(&self) -> usize {
         KEY_MATRIX_LEN
     }
+
     fn read_key_matrix(&'a mut self, cable: &mut Cable) -> KeyMatrixDelta<'a> {
         self.prev_key_matrix.clone_from_slice(&self.key_matrix);
-        self.key_matrix.copy_from_slice(&cable.read_bytes(KEY_MATRIX_LEN, Duration::from_secs(0), true));
+        self.key_matrix.copy_from_slice(&cable.read_bytes(
+            KEY_MATRIX_LEN,
+            Duration::from_secs(0),
+            true,
+        ));
 
-        KeyMatrixDelta { curr: &self.key_matrix, prev: &self.prev_key_matrix }
+        KeyMatrixDelta {
+            curr: &self.key_matrix,
+            prev: &self.prev_key_matrix,
+        }
     }
 }
 impl TI92Plus {

@@ -15,10 +15,10 @@ pub struct Cable {
     // we need a second buffer to store the raw data
     packet_buffer: Vec<u8>,
 
-    bytes_read_overall: usize,
+    pub bytes_read_overall: usize,
 
-    malformed_reads: u64,
-    overreads: u64,
+    pub malformed_reads: u64,
+    pub overreads: u64,
 }
 impl Cable {
     pub fn new() -> Result<Cable, String> {
@@ -53,12 +53,20 @@ impl Cable {
         })
     }
 
-    pub fn read_bytes(&mut self, bytes_expected: usize, timeout: Duration, attempt_repair: bool) -> Vec<u8> {
+    pub fn read_bytes(
+        &mut self,
+        bytes_expected: usize,
+        timeout: Duration,
+        attempt_repair: bool,
+    ) -> Vec<u8> {
         let mut bytes_read = 0;
 
         while self.packet_buffer.len() < bytes_expected {
             let mut buf: [u8; 512] = [0; 512]; // the cable /advertises/ that the max packet size is 32 bytes. This is apparently a lie.
-            let read_size = self.handle.read_bulk(READ_ENDPOINT, &mut buf, timeout).unwrap();
+            let read_size = self
+                .handle
+                .read_bulk(READ_ENDPOINT, &mut buf, timeout)
+                .unwrap();
 
             self.bytes_read_overall += read_size;
             bytes_read += read_size;
@@ -80,27 +88,21 @@ impl Cable {
             }
         }
 
-        return self.packet_buffer.drain(0..bytes_expected).collect::<Vec<u8>>();
+        return self
+            .packet_buffer
+            .drain(0..bytes_expected)
+            .collect::<Vec<u8>>();
     }
 
     pub fn write_bytes(&mut self, bytes: &[u8], timeout: Duration) {
-        let _bytes_written = self.handle.write_bulk(WRITE_ENDPOINT, bytes, timeout).unwrap();
+        let _bytes_written = self
+            .handle
+            .write_bulk(WRITE_ENDPOINT, bytes, timeout)
+            .unwrap();
     }
 
     pub fn release(&mut self) -> rusb::Result<()> {
         self.handle.release_interface(0)
-    }
-
-    pub fn bytes_read_overall(&self) -> usize {
-        self.bytes_read_overall
-    }
-
-    pub fn malformed_reads(&self) -> u64 {
-        self.malformed_reads
-    }
-
-    pub fn overreads(&self) -> u64 {
-        self.overreads
     }
 }
 
@@ -108,7 +110,11 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
     let devices = rusb::devices().expect("Unable to access USB device list");
 
     for device in devices.iter() {
-        println!("Trying device {}:{}...", device.bus_number(), device.address());
+        println!(
+            "Trying device {}:{}...",
+            device.bus_number(),
+            device.address()
+        );
 
         let descriptor = match device.device_descriptor() {
             Ok(descriptor) => descriptor,
@@ -118,7 +124,9 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
             }
         };
 
-        if descriptor.vendor_id() != TI_VENDOR_ID || descriptor.product_id() != SILVERLINK_PRODUCT_ID {
+        if descriptor.vendor_id() != TI_VENDOR_ID
+            || descriptor.product_id() != SILVERLINK_PRODUCT_ID
+        {
             println!("Device is not SilverLink cable, skipping.");
             continue;
         }

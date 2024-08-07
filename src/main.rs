@@ -14,7 +14,11 @@ use uinput::{
     Event,
 };
 
-use i68apollo::{cable::Cable, calc::{ti92p::TI92Plus, Calc, KeyMatrixDelta}, keyboard::VirtualKeyboard};
+use i68apollo::{
+    cable::Cable,
+    calc::{ti92p::TI92Plus, Calc, KeyMatrixDelta},
+    keyboard::VirtualKeyboard,
+};
 
 fn calculate_checksum(data: Vec<u8>) -> u16 {
     let mut checksum: u16 = 0;
@@ -96,7 +100,6 @@ fn main() {
 
     println!("Awaiting first packet...");
 
-    let key_matrix_len = calc.get_key_matrix_len();
     let keymap = calc.get_keymap().to_owned();
 
     let loop_start = Instant::now();
@@ -150,11 +153,8 @@ fn main() {
         packets as f64 / secs_since_loop_start,
     );
 
-    println!("bytes read: {}, overreads: {}, malformed reads: {}",
-             cable.bytes_read_overall(),
-             cable.overreads(),
-             cable.malformed_reads()
+    println!(
+        "bytes read: {}, overreads: {}, malformed reads: {}",
+        cable.bytes_read_overall, cable.overreads, cable.malformed_reads
     );
-
-    cable.release().expect("Unable to release interface 0"); // in from calc
 }
