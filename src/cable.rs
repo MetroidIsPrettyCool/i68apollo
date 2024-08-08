@@ -133,6 +133,7 @@ fn get_link_cable(devices: DeviceList<GlobalContext>) -> Option<DeviceHandle<Glo
 
         let descriptor = match device.device_descriptor() {
             Ok(descriptor) => descriptor,
+            #[allow(unused_variables)]
             Err(e) => {
                 debug_eprintln!("slvnk: unable to access device descriptor, skipping. Reason: {e}");
                 continue;
@@ -148,6 +149,7 @@ fn get_link_cable(devices: DeviceList<GlobalContext>) -> Option<DeviceHandle<Glo
 
         let handle = match device.open() {
             Ok(handle) => handle,
+            #[allow(unused_variables)]
             Err(e) => {
                 debug_eprintln!("slvnk: unable to open SilverLink cable, skipping. Reason: {e}");
                 continue;
