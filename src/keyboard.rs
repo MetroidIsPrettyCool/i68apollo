@@ -90,7 +90,7 @@ pub enum CalcKey {
 }
 
 pub struct VirtualKeyboard {
-    pub handle: Device,
+    handle: Device,
 }
 impl VirtualKeyboard {
     pub fn new() -> Result<VirtualKeyboard> {

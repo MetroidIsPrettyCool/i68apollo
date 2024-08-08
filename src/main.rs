@@ -25,7 +25,7 @@ fn main() {
 
     // ---------------init calc---------------
 
-    let mut calc = TI92Plus::new();
+    let calc = TI92Plus::new();
 
     // ---------------wait---------------
 
@@ -39,7 +39,7 @@ fn main() {
 
     let loop_start = Instant::now();
 
-    run(&mut cable, &mut calc, &mut virtual_kbd);
+    run(&mut cable, Box::new(calc), &mut virtual_kbd);
 
     let time_elapsed = Instant::now().duration_since(loop_start);
     println!(

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use cable::Cable;
-use calc::{ti92p::TI92Plus, Calc};
+use calc::Calc;
 use keyboard::{CalcKey, VirtualKeyboard};
 
 pub mod cable;
@@ -9,14 +9,11 @@ pub mod calc;
 pub mod keyboard;
 
 pub fn apollo_version() -> (u8, u8, u8) {
-    let apollo_ver_major = u8::from_str_radix(env!("CARGO_PKG_VERSION_MAJOR"), 10)
-        .expect("unable to parse crate major version as u8");
-    let apollo_ver_minor = u8::from_str_radix(env!("CARGO_PKG_VERSION_MINOR"), 10)
-        .expect("unable to parse crate minor version as u8");
-    let apollo_ver_patch = u8::from_str_radix(env!("CARGO_PKG_VERSION_PATCH"), 10)
-        .expect("unable to parse crate patch version as u8");
+    let major = u8::from_str_radix(env!("CARGO_PKG_VERSION_MAJOR"), 10).unwrap();
+    let minor = u8::from_str_radix(env!("CARGO_PKG_VERSION_MINOR"), 10).unwrap();
+    let patch = u8::from_str_radix(env!("CARGO_PKG_VERSION_PATCH"), 10).unwrap();
 
-    (apollo_ver_major, apollo_ver_minor, apollo_ver_patch)
+    (major, minor, patch)
 }
 
 pub fn handshake(cable: &mut Cable) {
@@ -52,10 +49,12 @@ pub fn handshake(cable: &mut Cable) {
     }
 }
 
-pub fn run(cable: &mut Cable, calc: &mut TI92Plus, virtual_kbd: &mut VirtualKeyboard) {
+pub fn run(cable: &mut Cable, mut calc: Box<dyn Calc>, virtual_kbd: &mut VirtualKeyboard) {
     'outer: loop {
         for keystate in calc.get_keys(cable) {
             let (key, pressed) = keystate;
+
+            println!("{key:?}, pressed?: {pressed}");
 
             if key == CalcKey::ON && pressed {
                 break 'outer;
@@ -68,9 +67,6 @@ pub fn run(cable: &mut Cable, calc: &mut TI92Plus, virtual_kbd: &mut VirtualKeyb
             }
         }
 
-        virtual_kbd
-            .handle
-            .synchronize()
-            .expect("Unable to synchronize");
+        virtual_kbd.sync();
     }
 }
