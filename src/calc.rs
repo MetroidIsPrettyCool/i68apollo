@@ -1,7 +1,66 @@
+use std::time::Duration;
+
+use ti92p::TI92Plus;
+
 use crate::{cable::Cable, keyboard::CalcKey};
 
 pub mod ti92p;
 
-pub trait Calc {
+pub trait CalcHandle {
     fn get_keys(&mut self, cable: &mut Cable) -> Vec<(CalcKey, bool)>;
+}
+
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
+pub enum HandshakeError {
+    VersionMismatch(u8, u8, u8),
+    OtherError,
+}
+
+pub struct I68MetaInfo {
+    pub soyuz_ver: (u8, u8, u8),
+    pub calc_handle: Box<dyn CalcHandle>,
+}
+impl I68MetaInfo {
+    pub fn handshake(cable: &mut Cable) -> Result<I68MetaInfo, HandshakeError> {
+        let (apollo_ver_major, apollo_ver_minor, apollo_ver_patch) = apollo_version();
+
+        // ready?
+
+        let ready_byte = cable.read_bytes(1, Duration::from_secs(0));
+        if ready_byte[0] != 0x50 {
+            return Err(HandshakeError::OtherError);
+        }
+
+        // version check
+
+        let soyuz_ver = cable.read_bytes(3, Duration::from_secs(0));
+
+        let apollo_ver: [u8; 3] = [apollo_ver_major, apollo_ver_minor, apollo_ver_patch];
+        cable.write_bytes(&apollo_ver, Duration::from_secs(0));
+
+        let soyuz_ver_major = soyuz_ver[0];
+        let soyuz_ver_minor = soyuz_ver[1];
+        let soyuz_ver_patch = soyuz_ver[2];
+
+        if apollo_ver_major != soyuz_ver_major || apollo_ver_minor != soyuz_ver_minor {
+            return Err(HandshakeError::VersionMismatch(
+                soyuz_ver_major,
+                soyuz_ver_minor,
+                soyuz_ver_patch,
+            ));
+        }
+
+        Ok(I68MetaInfo {
+            soyuz_ver: (soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch),
+            calc_handle: Box::new(TI92Plus::new()),
+        })
+    }
+}
+
+pub fn apollo_version() -> (u8, u8, u8) {
+    let major = u8::from_str_radix(env!("CARGO_PKG_VERSION_MAJOR"), 10).unwrap();
+    let minor = u8::from_str_radix(env!("CARGO_PKG_VERSION_MINOR"), 10).unwrap();
+    let patch = u8::from_str_radix(env!("CARGO_PKG_VERSION_PATCH"), 10).unwrap();
+
+    (major, minor, patch)
 }

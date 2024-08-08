@@ -1,14 +1,13 @@
 use cable::Cable;
-use calc::Calc;
+use calc::CalcHandle;
 use debug_print::debug_eprintln;
 use keyboard::{CalcKey, VirtualKeyboard};
 
 pub mod cable;
 pub mod calc;
-pub mod handshake;
 pub mod keyboard;
 
-pub fn run(cable: &mut Cable, mut calc: Box<dyn Calc>, virtual_kbd: &mut VirtualKeyboard) {
+pub fn run(cable: &mut Cable, mut calc: Box<dyn CalcHandle>, virtual_kbd: &mut VirtualKeyboard) {
     'outer: loop {
         for keystate in calc.get_keys(cable) {
             let (key, pressed) = keystate;

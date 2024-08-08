@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::{cable::Cable, keyboard::CalcKey};
 
-use super::Calc;
+use super::CalcHandle;
 
 pub const KEY_MATRIX_LEN: usize = 10;
 
@@ -87,17 +87,16 @@ pub const KEY_TO_KEY_MAP: [((usize, u8), CalcKey); 78] = [
     ((1, 0), CalcKey::ON),
 ];
 
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub struct TI92Plus {
     key_matrix: [u8; KEY_MATRIX_LEN],
     prev_key_matrix: [u8; KEY_MATRIX_LEN],
 }
-impl Calc for TI92Plus {
+impl CalcHandle for TI92Plus {
     fn get_keys(&mut self, cable: &mut Cable) -> Vec<(crate::keyboard::CalcKey, bool)> {
         self.prev_key_matrix.clone_from_slice(&self.key_matrix);
-        self.key_matrix.copy_from_slice(&cable.read_bytes(
-            KEY_MATRIX_LEN,
-            Duration::from_secs(0),
-        ));
+        self.key_matrix
+            .copy_from_slice(&cable.read_bytes(KEY_MATRIX_LEN, Duration::from_secs(0)));
 
         let mut keys = Vec::new();
 

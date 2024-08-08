@@ -2,8 +2,7 @@ use std::time::Instant;
 
 use i68apollo::{
     cable::{Cable, CableCreationError},
-    calc::{ti92p::TI92Plus, Calc},
-    handshake::{apollo_version, HandshakeError, I68Config},
+    calc::{apollo_version, HandshakeError, I68MetaInfo},
     keyboard::{VirtualKeyboard, VirtualKeyboardCreationError},
     run,
 };
@@ -76,13 +75,11 @@ fn init_vkbd() -> Result<VirtualKeyboard, ()> {
     };
 }
 
-fn init_calc(cable: &mut Cable) -> Result<(Box<dyn Calc>, I68Config), ()> {
-    let calc = TI92Plus::new();
-
+fn init_calc(cable: &mut Cable) -> Result<I68MetaInfo, ()> {
     println!("Press any key on calculator to continue");
     eprintln!("Waiting for handshake...");
 
-    let i68_config = match I68Config::handshake(cable) {
+    let i68_config = match I68MetaInfo::handshake(cable) {
         Ok(conf) => conf,
 
         Err(e) => {
@@ -113,7 +110,7 @@ fn init_calc(cable: &mut Cable) -> Result<(Box<dyn Calc>, I68Config), ()> {
         i68_config.soyuz_ver.0, i68_config.soyuz_ver.1, i68_config.soyuz_ver.2
     );
 
-    return Ok((Box::new(calc), i68_config));
+    return Ok(i68_config);
 }
 
 fn main() {
@@ -143,7 +140,7 @@ fn main() {
     };
 
     let calc = match init_calc(&mut cable) {
-        Ok((calc, _)) => calc,
+        Ok(calc) => calc,
         Err(_) => {
             return;
         }
@@ -155,7 +152,7 @@ fn main() {
 
     println!("Press ON at any time to quit.\n");
     let loop_start = Instant::now();
-    run(&mut cable, calc, &mut virtual_kbd);
+    run(&mut cable, calc.calc_handle, &mut virtual_kbd);
 
     // ---------------print stats---------------
 

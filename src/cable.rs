@@ -70,11 +70,7 @@ impl Cable {
         })
     }
 
-    pub fn read_bytes(
-        &mut self,
-        bytes_expected: usize,
-        timeout: Duration,
-    ) -> Vec<u8> {
+    pub fn read_bytes(&mut self, bytes_expected: usize, timeout: Duration) -> Vec<u8> {
         while self.byte_buffer.len() < bytes_expected {
             let mut buf: [u8; 512] = [0; 512]; // the cable /advertises/ that the max packet size is 32 bytes. This is apparently a lie.
             let read_size = self
