@@ -1,10 +1,13 @@
 use std::time::Duration;
 
+use debug_print::debug_eprintln;
+use ti89::TI89;
 use ti92p::TI92Plus;
 
 use crate::{cable::Cable, keyboard::CalcKey};
 
 pub mod ti92p;
+pub mod ti89;
 
 pub trait CalcHandle {
     fn get_keys(&mut self, cable: &mut Cable) -> Vec<(CalcKey, bool)>;
@@ -18,6 +21,7 @@ pub enum HandshakeError {
 
 pub struct I68MetaInfo {
     pub soyuz_ver: (u8, u8, u8),
+    pub machine_id: u8,
     pub calc_handle: Box<dyn CalcHandle>,
 }
 impl I68MetaInfo {
@@ -50,9 +54,19 @@ impl I68MetaInfo {
             ));
         }
 
+        // machine id
+
+        let machine_id = cable.read_bytes(1, Duration::from_secs(0))[0];
+        debug_eprintln!("machine id: {machine_id}");
+
         Ok(I68MetaInfo {
             soyuz_ver: (soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch),
-            calc_handle: Box::new(TI92Plus::new()),
+            machine_id,
+            calc_handle: match machine_id {
+                95 => Box::new(TI92Plus::new()),
+                89 => Box::new(TI89::new()),
+                _ => panic!()
+            },
         })
     }
 }

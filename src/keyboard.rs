@@ -88,6 +88,11 @@ pub enum CalcKey {
     ENTER1,
     Subtraction,
     ON,
+    Alpha,
+    CATLG,
+    HOME,
+    Bar,
+    EE
 }
 
 #[derive(Debug)]
@@ -244,5 +249,10 @@ fn map_key_to_key(key: &CalcKey) -> Keyboard {
         CalcKey::ENTER1 => Keyboard::KeyPad(KeyPad::Enter),
         CalcKey::Subtraction => Keyboard::Key(Key::Minus),
         CalcKey::ON => Keyboard::Key(Key::SysRq),
+        CalcKey::Alpha => Keyboard::Key(Key::LeftMeta),
+        CalcKey::CATLG => Keyboard::Key(Key::F14),
+        CalcKey::HOME => Keyboard::Key(Key::Home),
+        CalcKey::Bar => Keyboard::Key(Key::BackSlash),
+        CalcKey::EE => Keyboard::Key(Key::E),
     }
 }
