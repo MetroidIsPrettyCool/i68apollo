@@ -14,7 +14,7 @@ fn init_cable() -> Result<Cable, ()> {
         Ok(cable) => {
             println!("SilverLink successfully initialized\n");
             Ok(cable)
-        },
+        }
 
         Err(e) => {
             println!("Initialization failed\n");
@@ -49,7 +49,7 @@ fn init_vkbd() -> Result<VirtualKeyboard, ()> {
         Ok(vkbd) => {
             println!("Virtual keyboard created\n");
             Ok(vkbd)
-        },
+        }
 
         Err(e) => {
             println!("Creation failed\n");
@@ -124,17 +124,23 @@ fn main() {
 
     let mut cable = match init_cable() {
         Ok(cable) => cable,
-        Err(_) => { return; }
+        Err(_) => {
+            return;
+        }
     };
 
     let mut virtual_kbd = match init_vkbd() {
         Ok(vkbd) => vkbd,
-        Err(_) => { return; }
+        Err(_) => {
+            return;
+        }
     };
 
     let calc = match init_calc(&mut cable) {
         Ok((calc, _)) => calc,
-        Err(_) => { return; }
+        Err(_) => {
+            return;
+        }
     };
 
     // ---------------main loop---------------
