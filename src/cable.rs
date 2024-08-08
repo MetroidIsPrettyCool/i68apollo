@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use debug_print::debug_println;
 use rusb::{DeviceHandle, GlobalContext};
 
 // constants sourced from lsusb
@@ -79,11 +80,11 @@ impl Cable {
 
             let discrepancy = bytes_read - bytes_expected;
             if bytes_read % bytes_expected == 0 {
-                println!("More bytes read than expected ({discrepancy}). Likely multiple packets, ignoring.");
+                eprintln!("More bytes read than expected ({discrepancy}). Likely multiple packets, ignoring.");
             } else {
                 self.stat_malformed_reads += 1;
 
-                println!("More bytes read than expected ({discrepancy}). Possible desync, attempting repair.");
+                eprintln!("More bytes read than expected ({discrepancy}). Possible desync, attempting repair.");
                 self.byte_buffer.drain(0..discrepancy);
             }
         }
@@ -110,7 +111,7 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
     let devices = rusb::devices().expect("Unable to access USB device list");
 
     for device in devices.iter() {
-        println!(
+        debug_println!(
             "Trying device {}:{}...",
             device.bus_number(),
             device.address()
@@ -119,7 +120,7 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
         let descriptor = match device.device_descriptor() {
             Ok(descriptor) => descriptor,
             Err(e) => {
-                println!("Unable to access device descriptor, skipping. Reason: {e}");
+                debug_println!("Unable to access device descriptor, skipping. Reason: {e}");
                 continue;
             }
         };
@@ -127,14 +128,14 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
         if descriptor.vendor_id() != TI_VENDOR_ID
             || descriptor.product_id() != SILVERLINK_PRODUCT_ID
         {
-            println!("Device is not SilverLink cable, skipping.");
+            debug_println!("Device is not SilverLink cable, skipping.");
             continue;
         }
 
         let handle = match device.open() {
             Ok(handle) => handle,
             Err(e) => {
-                println!("Unable to open SilverLink cable, skipping. Reason: {e}");
+                debug_println!("Unable to open SilverLink cable, skipping. Reason: {e}");
                 continue;
             }
         };

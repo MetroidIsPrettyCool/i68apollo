@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use cable::Cable;
 use calc::Calc;
+use debug_print::debug_println;
 use keyboard::{CalcKey, VirtualKeyboard};
 
 pub mod cable;
@@ -64,7 +65,7 @@ pub fn run(cable: &mut Cable, mut calc: Box<dyn Calc>, virtual_kbd: &mut Virtual
         for keystate in calc.get_keys(cable) {
             let (key, pressed) = keystate;
 
-            println!("{key:?}, pressed?: {pressed}");
+            debug_println!("{key:?}, pressed?: {pressed}");
 
             if key == CalcKey::ON && pressed {
                 break 'outer;

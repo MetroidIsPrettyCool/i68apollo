@@ -7,3 +7,4 @@ edition = "2021"
 rusb = "0.9.4"
 uinput = "0.1.3"
 strum = { version = "0.26", features = ["derive"] }
+debug_print = "1.0.0"
