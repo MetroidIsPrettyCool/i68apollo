@@ -97,7 +97,6 @@ impl Calc for TI92Plus {
         self.key_matrix.copy_from_slice(&cable.read_bytes(
             KEY_MATRIX_LEN,
             Duration::from_secs(0),
-            true,
         ));
 
         let mut keys = Vec::new();

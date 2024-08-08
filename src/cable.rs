@@ -74,10 +74,7 @@ impl Cable {
         &mut self,
         bytes_expected: usize,
         timeout: Duration,
-        attempt_repair: bool,
     ) -> Vec<u8> {
-        let mut bytes_read = 0;
-
         while self.byte_buffer.len() < bytes_expected {
             let mut buf: [u8; 512] = [0; 512]; // the cable /advertises/ that the max packet size is 32 bytes. This is apparently a lie.
             let read_size = self
@@ -86,23 +83,8 @@ impl Cable {
                 .unwrap();
 
             self.stat_bytes_read_overall += read_size;
-            bytes_read += read_size;
 
             self.byte_buffer.extend_from_slice(&buf[0..read_size]);
-        }
-
-        if attempt_repair && bytes_read > bytes_expected {
-            self.stat_overreads += 1;
-
-            let discrepancy = bytes_read - bytes_expected;
-            if bytes_read % bytes_expected == 0 {
-                eprintln!("slvnk: more bytes read than expected ({discrepancy}). Likely multiple packets, ignoring.");
-            } else {
-                self.stat_malformed_reads += 1;
-
-                eprintln!("slvnk: more bytes read than expected ({discrepancy}). Possible desync, attempting repair.");
-                self.byte_buffer.drain(0..discrepancy);
-            }
         }
 
         return self
