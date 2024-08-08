@@ -1,10 +1,11 @@
+use debug_print::debug_eprintln;
 use strum::{EnumIter, IntoEnumIterator};
 use uinput::{
     event::{
         keyboard::{Key, KeyPad},
         Keyboard,
     },
-    Device, Event, Result,
+    Device, Event,
 };
 
 #[derive(Eq, Hash, PartialEq, Debug, EnumIter)]
@@ -89,36 +90,77 @@ pub enum CalcKey {
     ON,
 }
 
+#[derive(Debug)]
+pub enum VirtualKeyboardCreationError {
+    EnableKeyFailed(Keyboard, uinput::Error),
+    UinputNotFound,
+    DefaultFailed(uinput::Error),
+    SetNameFailed(uinput::Error),
+    CreationFailed(uinput::Error),
+}
+
 pub struct VirtualKeyboard {
     handle: Device,
 }
 impl VirtualKeyboard {
-    pub fn new() -> Result<VirtualKeyboard> {
-        let mut virtual_kbd = uinput::default()?.name("i68apollo")?;
+    pub fn new() -> Result<VirtualKeyboard, VirtualKeyboardCreationError> {
+        let mut virtual_kbd = match uinput::default() {
+            Ok(vkbd) => vkbd,
+            Err(e) => {
+                return Err(match e {
+                    uinput::Error::NotFound => VirtualKeyboardCreationError::UinputNotFound,
+                    _ => VirtualKeyboardCreationError::DefaultFailed(e),
+                });
+            }
+        };
+        virtual_kbd = match virtual_kbd.name("i68apollo") {
+            Ok(vkbd) => vkbd,
+            Err(e) => {
+                return Err(VirtualKeyboardCreationError::SetNameFailed(e));
+            }
+        };
 
         for calc_key in CalcKey::iter() {
-            virtual_kbd = virtual_kbd.event(Event::Keyboard(map_key_to_key(&calc_key)))?;
+            let key_event = map_key_to_key(&calc_key);
+            debug_eprintln!("vkbd: enabling {key_event:?}");
+            virtual_kbd = match virtual_kbd.event(Event::Keyboard(key_event)) {
+                Ok(vkbd) => vkbd,
+                Err(e) => {
+                    return Err(VirtualKeyboardCreationError::EnableKeyFailed(key_event, e));
+                }
+            };
         }
 
-        let handle = virtual_kbd.create()?;
+        let handle = match virtual_kbd.create() {
+            Ok(vkbd) => vkbd,
+            Err(e) => {
+                return Err(VirtualKeyboardCreationError::CreationFailed(e));
+            }
+        };
 
         Ok(VirtualKeyboard { handle })
     }
 
-    pub fn press_key(&mut self, key: &CalcKey) {
+    pub fn press_key(&mut self, key: &CalcKey) -> uinput::Result<()> {
         let key_event = map_key_to_key(key);
 
-        self.handle.press(&key_event).expect("Can't press key!");
+        debug_eprintln!("vkbd: pressing {key_event:?}");
+
+        self.handle.press(&key_event)
     }
 
-    pub fn release_key(&mut self, key: &CalcKey) {
+    pub fn release_key(&mut self, key: &CalcKey) -> uinput::Result<()> {
         let key_event = map_key_to_key(key);
 
-        self.handle.release(&key_event).expect("Can't release key!");
+        debug_eprintln!("vkbd: releasing {key_event:?}");
+
+        self.handle.release(&key_event)
     }
 
-    pub fn sync(&mut self) {
-        self.handle.synchronize().expect("Can't sync!");
+    pub fn sync(&mut self) -> uinput::Result<()> {
+        debug_eprintln!("vkbd: syncing");
+
+        self.handle.synchronize()
     }
 }
 

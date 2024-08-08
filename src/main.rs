@@ -1,8 +1,12 @@
 use std::time::Instant;
 
 use i68apollo::{
-    apollo_version, cable::Cable, calc::ti92p::TI92Plus, handshake, keyboard::VirtualKeyboard, run,
-    HandshakeError,
+    apollo_version,
+    cable::{Cable, CableCreationError},
+    calc::ti92p::TI92Plus,
+    handshake,
+    keyboard::{VirtualKeyboard, VirtualKeyboardCreationError},
+    run, HandshakeError,
 };
 
 fn main() {
@@ -14,14 +18,65 @@ fn main() {
     // ---------------init cable---------------
 
     println!("Initializing SilverLink cable...");
-    let mut cable = Cable::new().expect("Error initializing cable");
+    let mut cable = match Cable::new() {
+        Ok(cable) => cable,
+
+        Err(e) => {
+            println!("Initialization failed\n");
+            match e {
+                CableCreationError::GetDevicesListFailed(e) => {
+                    println!("Couldn't get USB devices list. Reason: {e}");
+                }
+                CableCreationError::NoCableFound => {
+                    println!("Couldn't find SilverLink cable. Is it plugged in?");
+                }
+                CableCreationError::ClaimInterfaceFailed(e) => {
+                    println!("Couldn't claim cable interface 0x00. Reason: {e}");
+                    println!("Is another program using this cable?");
+                }
+                CableCreationError::ConfigurationFailed(e) => {
+                    println!("Couldn't set cable active configuration. Reason: {e}");
+                    println!("Is another program using this cable?");
+                }
+                CableCreationError::ResetFailed(e) => {
+                    println!("Couldn't reset cable. Reason: {e}");
+                    println!("Is another program using this cable?");
+                }
+            }
+            return;
+        }
+    };
     println!("SilverLink successfully initialized\n");
 
     // ---------------init uinput device---------------
 
     println!("Creating virtual keyboard...");
-    let mut virtual_kbd = VirtualKeyboard::new()
-        .expect("Unable to create virtual keyboard. Is uinput loaded? Reason");
+    let mut virtual_kbd = match VirtualKeyboard::new() {
+        Ok(vkbd) => vkbd,
+
+        Err(e) => {
+            println!("Creation failed\n");
+            match e {
+                VirtualKeyboardCreationError::UinputNotFound => {
+                    println!("uinput device file not found. Is it loaded?");
+                    println!("Try running \"sudo modprobe uinput\"");
+                }
+                VirtualKeyboardCreationError::DefaultFailed(e) => {
+                    println!("Default uinput device construction failed. Reason: {e}");
+                }
+                VirtualKeyboardCreationError::SetNameFailed(e) => {
+                    println!("Setting uinput device name failed. Reason: {e}");
+                }
+                VirtualKeyboardCreationError::EnableKeyFailed(key, e) => {
+                    println!("Enabling key {key:?} for uinput device failed. Reason: {e}");
+                }
+                VirtualKeyboardCreationError::CreationFailed(e) => {
+                    println!("Finalizing uinput device failed. Reason: {e}");
+                }
+            }
+            return;
+        }
+    };
     println!("Virtual keyboard created\n");
 
     // ---------------init calc---------------
@@ -29,14 +84,8 @@ fn main() {
     let calc = TI92Plus::new();
 
     println!("Waiting for handshake...");
-    match handshake(&mut cable) {
-        Ok(conf) => {
-            println!("Handshake success\n");
-            println!(
-                "soyuz: {}.{}.{}\n",
-                conf.soyuz_ver.0, conf.soyuz_ver.1, conf.soyuz_ver.2
-            );
-        }
+    let i68_config = match handshake(&mut cable) {
+        Ok(conf) => conf,
 
         Err(e) => {
             println!("Handshake failed\n");
@@ -51,16 +100,20 @@ fn main() {
                         "soyuz ver: {}.{}.{}\n",
                         soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch
                     );
-                    println!("Aborting");
                 }
 
                 HandshakeError::OtherError => {
-                    println!("Error during handshake, aborting");
+                    println!("Error during handshake");
                 }
             }
             return;
         }
-    }
+    };
+    println!("Handshake success\n");
+    println!(
+        "soyuz ver: {}.{}.{}\n",
+        i68_config.soyuz_ver.0, i68_config.soyuz_ver.1, i68_config.soyuz_ver.2
+    );
 
     // ---------------main loop---------------
 

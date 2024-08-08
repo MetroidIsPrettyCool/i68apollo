@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use cable::Cable;
 use calc::Calc;
-use debug_print::debug_println;
+use debug_print::debug_eprintln;
 use keyboard::{CalcKey, VirtualKeyboard};
 
 pub mod cable;
@@ -17,11 +17,13 @@ pub fn apollo_version() -> (u8, u8, u8) {
     (major, minor, patch)
 }
 
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum HandshakeError {
     VersionMismatch(u8, u8, u8),
     OtherError,
 }
 
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub struct I68Config {
     pub soyuz_ver: (u8, u8, u8),
 }
@@ -65,19 +67,19 @@ pub fn run(cable: &mut Cable, mut calc: Box<dyn Calc>, virtual_kbd: &mut Virtual
         for keystate in calc.get_keys(cable) {
             let (key, pressed) = keystate;
 
-            debug_println!("{key:?}, pressed?: {pressed}");
+            debug_eprintln!("{key:?}, pressed?: {pressed}");
 
             if key == CalcKey::ON && pressed {
                 break 'outer;
             }
 
             if pressed {
-                virtual_kbd.press_key(&key);
+                virtual_kbd.press_key(&key).expect("can't press key!");
             } else {
-                virtual_kbd.release_key(&key);
+                virtual_kbd.release_key(&key).expect("can't release key!");
             }
         }
 
-        virtual_kbd.sync();
+        virtual_kbd.sync().expect("can't sync!");
     }
 }

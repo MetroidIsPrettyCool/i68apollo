@@ -1,7 +1,7 @@
 use std::time::Duration;
 
-use debug_print::debug_println;
-use rusb::{DeviceHandle, GlobalContext};
+use debug_print::debug_eprintln;
+use rusb::{DeviceHandle, DeviceList, GlobalContext};
 
 // constants sourced from lsusb
 const WRITE_ENDPOINT: u8 = 0x02;
@@ -9,6 +9,15 @@ const READ_ENDPOINT: u8 = 0x81;
 
 const TI_VENDOR_ID: u16 = 0x0451;
 const SILVERLINK_PRODUCT_ID: u16 = 0xe001;
+
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
+pub enum CableCreationError {
+    GetDevicesListFailed(rusb::Error),
+    NoCableFound,
+    ResetFailed(rusb::Error),
+    ConfigurationFailed(rusb::Error),
+    ClaimInterfaceFailed(rusb::Error),
+}
 
 pub struct Cable {
     handle: DeviceHandle<GlobalContext>,
@@ -22,27 +31,34 @@ pub struct Cable {
     pub stat_overreads: u64,
 }
 impl Cable {
-    pub fn new() -> Result<Cable, String> {
-        let cable_handle = match get_link_cable() {
+    pub fn new() -> Result<Cable, CableCreationError> {
+        let devices = match rusb::devices() {
+            Ok(devices) => devices,
+            Err(e) => {
+                return Err(CableCreationError::GetDevicesListFailed(e));
+            }
+        };
+
+        let cable_handle = match get_link_cable(devices) {
             Some(handle) => handle,
             None => {
-                return Err("unable to find cable. (is it plugged in?)".to_string());
+                return Err(CableCreationError::NoCableFound);
             }
         };
 
         let reset_result = cable_handle.reset();
         if let Err(e) = reset_result {
-            return Err(format!("unable to reset cable: {e}"));
+            return Err(CableCreationError::ResetFailed(e));
         }
 
         let set_conf_result = cable_handle.set_active_configuration(1);
         if let Err(e) = set_conf_result {
-            return Err(format!("unable to set active configuration: {e}"));
+            return Err(CableCreationError::ConfigurationFailed(e));
         }
 
         let claim_interface_result = cable_handle.claim_interface(0);
         if let Err(e) = claim_interface_result {
-            return Err(format!("unable to claim interface: {e}"));
+            return Err(CableCreationError::ClaimInterfaceFailed(e));
         }
 
         Ok(Cable {
@@ -80,11 +96,11 @@ impl Cable {
 
             let discrepancy = bytes_read - bytes_expected;
             if bytes_read % bytes_expected == 0 {
-                eprintln!("More bytes read than expected ({discrepancy}). Likely multiple packets, ignoring.");
+                eprintln!("slvnk: more bytes read than expected ({discrepancy}). Likely multiple packets, ignoring.");
             } else {
                 self.stat_malformed_reads += 1;
 
-                eprintln!("More bytes read than expected ({discrepancy}). Possible desync, attempting repair.");
+                eprintln!("slvnk: more bytes read than expected ({discrepancy}). Possible desync, attempting repair.");
                 self.byte_buffer.drain(0..discrepancy);
             }
         }
@@ -107,12 +123,10 @@ impl Cable {
     }
 }
 
-fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
-    let devices = rusb::devices().expect("Unable to access USB device list");
-
+fn get_link_cable(devices: DeviceList<GlobalContext>) -> Option<DeviceHandle<GlobalContext>> {
     for device in devices.iter() {
-        debug_println!(
-            "Trying device {}:{}...",
+        debug_eprintln!(
+            "slvnk: Trying device {}:{}...",
             device.bus_number(),
             device.address()
         );
@@ -120,7 +134,7 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
         let descriptor = match device.device_descriptor() {
             Ok(descriptor) => descriptor,
             Err(e) => {
-                debug_println!("Unable to access device descriptor, skipping. Reason: {e}");
+                debug_eprintln!("slvnk: unable to access device descriptor, skipping. Reason: {e}");
                 continue;
             }
         };
@@ -128,14 +142,14 @@ fn get_link_cable() -> Option<DeviceHandle<GlobalContext>> {
         if descriptor.vendor_id() != TI_VENDOR_ID
             || descriptor.product_id() != SILVERLINK_PRODUCT_ID
         {
-            debug_println!("Device is not SilverLink cable, skipping.");
+            debug_eprintln!("slvnk: device is not SilverLink cable, skipping.");
             continue;
         }
 
         let handle = match device.open() {
             Ok(handle) => handle,
             Err(e) => {
-                debug_println!("Unable to open SilverLink cable, skipping. Reason: {e}");
+                debug_eprintln!("slvnk: unable to open SilverLink cable, skipping. Reason: {e}");
                 continue;
             }
         };
