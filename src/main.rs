@@ -2,23 +2,19 @@ use std::time::Instant;
 
 use i68apollo::{
     cable::{Cable, CableCreationError},
-    calc::ti92p::TI92Plus,
-    handshake::{apollo_version, I68Config, HandshakeError},
+    calc::{ti92p::TI92Plus, Calc},
+    handshake::{apollo_version, HandshakeError, I68Config},
     keyboard::{VirtualKeyboard, VirtualKeyboardCreationError},
     run,
 };
 
-fn main() {
-    // ---------------startup message---------------
-
-    let (apollo_ver_major, apollo_ver_minor, apollo_ver_patch) = apollo_version();
-    println!("i68 local component \"apollo\"\n\nVersion: {apollo_ver_major}.{apollo_ver_minor}.{apollo_ver_patch}\n");
-
-    // ---------------init cable---------------
-
+fn init_cable() -> Result<Cable, ()> {
     println!("Initializing SilverLink cable...");
-    let mut cable = match Cable::new() {
-        Ok(cable) => cable,
+    return match Cable::new() {
+        Ok(cable) => {
+            println!("SilverLink successfully initialized\n");
+            Ok(cable)
+        },
 
         Err(e) => {
             println!("Initialization failed\n");
@@ -42,16 +38,18 @@ fn main() {
                     println!("Is another program using this cable?");
                 }
             }
-            return;
+            Err(())
         }
     };
-    println!("SilverLink successfully initialized\n");
+}
 
-    // ---------------init uinput device---------------
-
+fn init_vkbd() -> Result<VirtualKeyboard, ()> {
     println!("Creating virtual keyboard...");
-    let mut virtual_kbd = match VirtualKeyboard::new() {
-        Ok(vkbd) => vkbd,
+    return match VirtualKeyboard::new() {
+        Ok(vkbd) => {
+            println!("Virtual keyboard created\n");
+            Ok(vkbd)
+        },
 
         Err(e) => {
             println!("Creation failed\n");
@@ -73,17 +71,16 @@ fn main() {
                     println!("Finalizing uinput device failed. Reason: {e}");
                 }
             }
-            return;
+            Err(())
         }
     };
-    println!("Virtual keyboard created\n");
+}
 
-    // ---------------init calc---------------
-
+fn init_calc(cable: &mut Cable) -> Result<(Box<dyn Calc>, I68Config), ()> {
     let calc = TI92Plus::new();
 
     println!("Waiting for handshake...");
-    let i68_config = match I68Config::handshake(&mut cable) {
+    let i68_config = match I68Config::handshake(cable) {
         Ok(conf) => conf,
 
         Err(e) => {
@@ -105,7 +102,7 @@ fn main() {
                     println!("Error during handshake");
                 }
             }
-            return;
+            return Err(());
         }
     };
     println!("Handshake success\n");
@@ -114,11 +111,37 @@ fn main() {
         i68_config.soyuz_ver.0, i68_config.soyuz_ver.1, i68_config.soyuz_ver.2
     );
 
+    return Ok((Box::new(calc), i68_config));
+}
+
+fn main() {
+    // ---------------startup message---------------
+
+    let (apollo_ver_major, apollo_ver_minor, apollo_ver_patch) = apollo_version();
+    println!("i68 local component \"apollo\"\n\nVersion: {apollo_ver_major}.{apollo_ver_minor}.{apollo_ver_patch}\n");
+
+    // ---------------init---------------
+
+    let mut cable = match init_cable() {
+        Ok(cable) => cable,
+        Err(_) => { return; }
+    };
+
+    let mut virtual_kbd = match init_vkbd() {
+        Ok(vkbd) => vkbd,
+        Err(_) => { return; }
+    };
+
+    let calc = match init_calc(&mut cable) {
+        Ok((calc, _)) => calc,
+        Err(_) => { return; }
+    };
+
     // ---------------main loop---------------
 
     println!("Press ON at any time to quit.\n");
     let loop_start = Instant::now();
-    run(&mut cable, Box::new(calc), &mut virtual_kbd);
+    run(&mut cable, calc, &mut virtual_kbd);
 
     // ---------------print stats---------------
 
