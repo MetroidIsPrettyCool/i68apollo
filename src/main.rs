@@ -1,12 +1,11 @@
 use std::time::Instant;
 
 use i68apollo::{
-    apollo_version,
     cable::{Cable, CableCreationError},
     calc::ti92p::TI92Plus,
-    handshake,
+    handshake::{apollo_version, I68Config, HandshakeError},
     keyboard::{VirtualKeyboard, VirtualKeyboardCreationError},
-    run, HandshakeError,
+    run,
 };
 
 fn main() {
@@ -84,7 +83,7 @@ fn main() {
     let calc = TI92Plus::new();
 
     println!("Waiting for handshake...");
-    let i68_config = match handshake(&mut cable) {
+    let i68_config = match I68Config::handshake(&mut cable) {
         Ok(conf) => conf,
 
         Err(e) => {
