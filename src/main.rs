@@ -79,7 +79,9 @@ fn init_vkbd() -> Result<VirtualKeyboard, ()> {
 fn init_calc(cable: &mut Cable) -> Result<(Box<dyn Calc>, I68Config), ()> {
     let calc = TI92Plus::new();
 
+    println!("Press any key on calculator to continue");
     eprintln!("Waiting for handshake...");
+
     let i68_config = match I68Config::handshake(cable) {
         Ok(conf) => conf,
 
@@ -148,6 +150,8 @@ fn main() {
     };
 
     // ---------------main loop---------------
+
+    eprintln!("Begin async key matrix data transfer");
 
     println!("Press ON at any time to quit.\n");
     let loop_start = Instant::now();
