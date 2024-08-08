@@ -9,33 +9,33 @@ use i68apollo::{
 };
 
 fn init_cable() -> Result<Cable, ()> {
-    println!("Initializing SilverLink cable...");
+    eprintln!("Initializing SilverLink cable...");
     return match Cable::new() {
         Ok(cable) => {
-            println!("SilverLink successfully initialized\n");
+            eprintln!("SilverLink successfully initialized\n");
             Ok(cable)
         }
 
         Err(e) => {
-            println!("Initialization failed\n");
+            eprintln!("Initialization failed\n");
             match e {
                 CableCreationError::GetDevicesListFailed(e) => {
-                    println!("Couldn't get USB devices list. Reason: {e}");
+                    eprintln!("Couldn't get USB devices list. Reason: {e}");
                 }
                 CableCreationError::NoCableFound => {
-                    println!("Couldn't find SilverLink cable. Is it plugged in?");
+                    eprintln!("Couldn't find SilverLink cable. Is it plugged in?");
                 }
                 CableCreationError::ClaimInterfaceFailed(e) => {
-                    println!("Couldn't claim cable interface 0x00. Reason: {e}");
-                    println!("Is another program using this cable?");
+                    eprintln!("Couldn't claim cable interface 0x00. Reason: {e}");
+                    eprintln!("Is another program using this cable?");
                 }
                 CableCreationError::ConfigurationFailed(e) => {
-                    println!("Couldn't set cable active configuration. Reason: {e}");
-                    println!("Is another program using this cable?");
+                    eprintln!("Couldn't set cable active configuration. Reason: {e}");
+                    eprintln!("Is another program using this cable?");
                 }
                 CableCreationError::ResetFailed(e) => {
-                    println!("Couldn't reset cable. Reason: {e}");
-                    println!("Is another program using this cable?");
+                    eprintln!("Couldn't reset cable. Reason: {e}");
+                    eprintln!("Is another program using this cable?");
                 }
             }
             Err(())
@@ -44,31 +44,31 @@ fn init_cable() -> Result<Cable, ()> {
 }
 
 fn init_vkbd() -> Result<VirtualKeyboard, ()> {
-    println!("Creating virtual keyboard...");
+    eprintln!("Creating virtual keyboard...");
     return match VirtualKeyboard::new() {
         Ok(vkbd) => {
-            println!("Virtual keyboard created\n");
+            eprintln!("Virtual keyboard created\n");
             Ok(vkbd)
         }
 
         Err(e) => {
-            println!("Creation failed\n");
+            eprintln!("Creation failed\n");
             match e {
                 VirtualKeyboardCreationError::UinputNotFound => {
-                    println!("uinput device file not found. Is it loaded?");
-                    println!("Try running \"sudo modprobe uinput\"");
+                    eprintln!("uinput device file not found. Is it loaded?");
+                    eprintln!("Try running \"sudo modprobe uinput\"");
                 }
                 VirtualKeyboardCreationError::DefaultFailed(e) => {
-                    println!("Default uinput device construction failed. Reason: {e}");
+                    eprintln!("Default uinput device construction failed. Reason: {e}");
                 }
                 VirtualKeyboardCreationError::SetNameFailed(e) => {
-                    println!("Setting uinput device name failed. Reason: {e}");
+                    eprintln!("Setting uinput device name failed. Reason: {e}");
                 }
                 VirtualKeyboardCreationError::EnableKeyFailed(key, e) => {
-                    println!("Enabling key {key:?} for uinput device failed. Reason: {e}");
+                    eprintln!("Enabling key {key:?} for uinput device failed. Reason: {e}");
                 }
                 VirtualKeyboardCreationError::CreationFailed(e) => {
-                    println!("Finalizing uinput device failed. Reason: {e}");
+                    eprintln!("Finalizing uinput device failed. Reason: {e}");
                 }
             }
             Err(())
@@ -79,34 +79,34 @@ fn init_vkbd() -> Result<VirtualKeyboard, ()> {
 fn init_calc(cable: &mut Cable) -> Result<(Box<dyn Calc>, I68Config), ()> {
     let calc = TI92Plus::new();
 
-    println!("Waiting for handshake...");
+    eprintln!("Waiting for handshake...");
     let i68_config = match I68Config::handshake(cable) {
         Ok(conf) => conf,
 
         Err(e) => {
-            println!("Handshake failed\n");
+            eprintln!("Handshake failed\n");
             match e {
                 HandshakeError::VersionMismatch(
                     soyuz_ver_major,
                     soyuz_ver_minor,
                     soyuz_ver_patch,
                 ) => {
-                    println!("Version mismatch");
-                    println!(
+                    eprintln!("Version mismatch");
+                    eprintln!(
                         "soyuz ver: {}.{}.{}\n",
                         soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch
                     );
                 }
 
                 HandshakeError::OtherError => {
-                    println!("Error during handshake");
+                    eprintln!("Error during handshake");
                 }
             }
             return Err(());
         }
     };
-    println!("Handshake success\n");
-    println!(
+    eprintln!("Handshake success\n");
+    eprintln!(
         "soyuz ver: {}.{}.{}\n",
         i68_config.soyuz_ver.0, i68_config.soyuz_ver.1, i68_config.soyuz_ver.2
     );
@@ -118,7 +118,11 @@ fn main() {
     // ---------------startup message---------------
 
     let (apollo_ver_major, apollo_ver_minor, apollo_ver_patch) = apollo_version();
-    println!("i68 local component \"apollo\"\n\nVersion: {apollo_ver_major}.{apollo_ver_minor}.{apollo_ver_patch}\n");
+    println!("i68 local component \"apollo\"\n");
+    println!(
+        "Version: {}.{}.{}\n",
+        apollo_ver_major, apollo_ver_minor, apollo_ver_patch
+    );
 
     // ---------------init---------------
 
@@ -153,7 +157,7 @@ fn main() {
 
     let time_elapsed = Instant::now().duration_since(loop_start);
     println!(
-        "{} bytes read overall in {:.2} seconds",
+        "{} overall bytes read in {:.2} seconds",
         cable.stat_bytes_read_overall,
         time_elapsed.as_secs_f64(),
     );
