@@ -11,14 +11,14 @@ const SILVERLINK_PRODUCT_ID: u16 = 0xe001;
 
 pub struct Cable {
     handle: DeviceHandle<GlobalContext>,
-    // the SilverLink has its own internal 32-byte buffer, but since our data packets are 11 bytes they don't align and
-    // we need a second buffer to store the raw data
-    packet_buffer: Vec<u8>,
+    // the SilverLink has its own internal buffer, but our reads don't always align neatly with individual packets so we
+    // need a buffer here too
+    byte_buffer: Vec<u8>,
 
-    pub bytes_read_overall: usize,
+    pub stat_bytes_read_overall: usize,
 
-    pub malformed_reads: u64,
-    pub overreads: u64,
+    pub stat_malformed_reads: u64,
+    pub stat_overreads: u64,
 }
 impl Cable {
     pub fn new() -> Result<Cable, String> {
@@ -46,10 +46,10 @@ impl Cable {
 
         Ok(Cable {
             handle: cable_handle,
-            packet_buffer: Vec::new(),
-            bytes_read_overall: 0,
-            malformed_reads: 0,
-            overreads: 0,
+            byte_buffer: Vec::new(),
+            stat_bytes_read_overall: 0,
+            stat_malformed_reads: 0,
+            stat_overreads: 0,
         })
     }
 
@@ -61,35 +61,35 @@ impl Cable {
     ) -> Vec<u8> {
         let mut bytes_read = 0;
 
-        while self.packet_buffer.len() < bytes_expected {
+        while self.byte_buffer.len() < bytes_expected {
             let mut buf: [u8; 512] = [0; 512]; // the cable /advertises/ that the max packet size is 32 bytes. This is apparently a lie.
             let read_size = self
                 .handle
                 .read_bulk(READ_ENDPOINT, &mut buf, timeout)
                 .unwrap();
 
-            self.bytes_read_overall += read_size;
+            self.stat_bytes_read_overall += read_size;
             bytes_read += read_size;
 
-            self.packet_buffer.extend_from_slice(&buf[0..read_size]);
+            self.byte_buffer.extend_from_slice(&buf[0..read_size]);
         }
 
         if attempt_repair && bytes_read > bytes_expected {
-            self.overreads += 1;
+            self.stat_overreads += 1;
 
             let discrepancy = bytes_read - bytes_expected;
             if bytes_read % bytes_expected == 0 {
                 println!("More bytes read than expected ({discrepancy}). Likely multiple packets, ignoring.");
             } else {
-                self.malformed_reads += 1;
+                self.stat_malformed_reads += 1;
 
                 println!("More bytes read than expected ({discrepancy}). Possible desync, attempting repair.");
-                self.packet_buffer.drain(0..discrepancy);
+                self.byte_buffer.drain(0..discrepancy);
             }
         }
 
         return self
-            .packet_buffer
+            .byte_buffer
             .drain(0..bytes_expected)
             .collect::<Vec<u8>>();
     }

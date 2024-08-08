@@ -44,11 +44,11 @@ fn main() {
     let time_elapsed = Instant::now().duration_since(loop_start);
     println!(
         "{} bytes read overall in {:.2} seconds",
-        cable.bytes_read_overall,
+        cable.stat_bytes_read_overall,
         time_elapsed.as_secs_f64(),
     );
     println!(
         "overreads: {}, malformed reads: {}",
-        cable.overreads, cable.malformed_reads
+        cable.stat_overreads, cable.stat_malformed_reads
     );
 }
