@@ -16,19 +16,26 @@ pub fn apollo_version() -> (u8, u8, u8) {
     (major, minor, patch)
 }
 
-pub fn handshake(cable: &mut Cable) {
+pub enum HandshakeError {
+    VersionMismatch(u8, u8, u8),
+    OtherError,
+}
+
+pub struct I68Config {
+    pub soyuz_ver: (u8, u8, u8),
+}
+
+pub fn handshake(cable: &mut Cable) -> Result<I68Config, HandshakeError> {
     let (apollo_ver_major, apollo_ver_minor, apollo_ver_patch) = apollo_version();
+
+    // ready?
 
     let ready_byte = cable.read_bytes(1, Duration::from_secs(0), false);
     if ready_byte[0] != 0x50 {
-        println!("Received non-ready signal, aborting");
-        return;
+        return Err(HandshakeError::OtherError);
     }
-    println!("soyuz ready");
 
-    // ---------------version check---------------
-
-    println!("Performing version check...");
+    // version check
 
     let soyuz_ver = cable.read_bytes(3, Duration::from_secs(0), false);
 
@@ -39,14 +46,17 @@ pub fn handshake(cable: &mut Cable) {
     let soyuz_ver_minor = soyuz_ver[1];
     let soyuz_ver_patch = soyuz_ver[2];
 
-    println!("soyuz: {soyuz_ver_major}.{soyuz_ver_minor}.{soyuz_ver_patch}");
-    println!("apollo: {apollo_ver_major}.{apollo_ver_minor}.{apollo_ver_patch}");
-
     if apollo_ver_major != soyuz_ver_major || apollo_ver_minor != soyuz_ver_minor {
-        println!("Version mismatch, aborting");
-        cable.release().expect("Unable to release interface 0"); // in from calc
-        return;
+        return Err(HandshakeError::VersionMismatch(
+            soyuz_ver_major,
+            soyuz_ver_minor,
+            soyuz_ver_patch,
+        ));
     }
+
+    Ok(I68Config {
+        soyuz_ver: (soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch),
+    })
 }
 
 pub fn run(cable: &mut Cable, mut calc: Box<dyn Calc>, virtual_kbd: &mut VirtualKeyboard) {
