@@ -97,6 +97,11 @@ fn init_calc(cable: &mut Cable) -> Result<I68MetaInfo, ()> {
                     );
                 }
 
+                HandshakeError::UnknownMachineId(machine_id) => {
+                    eprintln!("Unknown/unsupported Machine ID: {machine_id}");
+                    eprintln!("Are you running the current version of i68apollo?");
+                }
+
                 HandshakeError::OtherError => {
                     eprintln!("Error during handshake");
                 }

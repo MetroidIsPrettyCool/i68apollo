@@ -16,6 +16,7 @@ pub trait CalcHandle {
 #[derive(Eq, PartialEq, Debug, Copy, Clone)]
 pub enum HandshakeError {
     VersionMismatch(u8, u8, u8),
+    UnknownMachineId(u8),
     OtherError,
 }
 
@@ -59,14 +60,18 @@ impl I68MetaInfo {
         let machine_id = cable.read_bytes(1, Duration::from_secs(0))[0];
         debug_eprintln!("machine id: {machine_id}");
 
+        let calc_handle: Box<dyn CalcHandle> = match machine_id {
+            192 => Box::new(TI92Plus::new()),
+            089 => Box::new(TI89::new()),
+            _ => {
+                return Err(HandshakeError::UnknownMachineId(machine_id));
+            }
+        };
+
         Ok(I68MetaInfo {
             soyuz_ver: (soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch),
             machine_id,
-            calc_handle: match machine_id {
-                192 => Box::new(TI92Plus::new()),
-                089 => Box::new(TI89::new()),
-                _ => panic!()
-            },
+            calc_handle,
         })
     }
 }
