@@ -63,8 +63,8 @@ impl I68MetaInfo {
             soyuz_ver: (soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch),
             machine_id,
             calc_handle: match machine_id {
-                95 => Box::new(TI92Plus::new()),
-                89 => Box::new(TI89::new()),
+                192 => Box::new(TI92Plus::new()),
+                089 => Box::new(TI89::new()),
                 _ => panic!()
             },
         })
