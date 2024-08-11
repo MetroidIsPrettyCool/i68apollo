@@ -32,6 +32,7 @@ impl I68MetaInfo {
         // ready?
 
         let ready_byte = cable.read_bytes(1, Duration::from_secs(0));
+        debug_eprintln!("ready_byte: {:?}", ready_byte);
         if ready_byte[0] != 0x50 {
             return Err(HandshakeError::OtherError);
         }
@@ -39,6 +40,8 @@ impl I68MetaInfo {
         // version check
 
         let soyuz_ver = cable.read_bytes(3, Duration::from_secs(0));
+
+        debug_eprintln!("soyuz ver: {:?}", soyuz_ver);
 
         let apollo_ver: [u8; 3] = [apollo_ver_major, apollo_ver_minor, apollo_ver_patch];
         cable.write_bytes(&apollo_ver, Duration::from_secs(0));
