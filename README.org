@@ -1,8 +1,8 @@
 [[./i68logo.png]]
 * Introduction
 ~i68apollo~ is the computer-based component of the two-part ~i68~ (*I*​nput from Motorola *68*​000[fn:4]-based calculator)
-prototype userspace driver[fn:1] intended to allow the use of a Texas Instruments TI-83 Plus, TI-89 or TI-92 Plus
-calculator as an external keyboard under Linux. ~i68apollo~ is not intended to work under any other operating system.
+prototype userspace driver intended to allow the use of a Texas Instruments TI-83 Plus, TI-89 or TI-92 Plus calculator
+as an external keyboard under Linux. ~i68apollo~ is not intended to work under any other operating system.
 
 ~i68apollo~ requires its sister component ~i68soyuz~ to function, which you can find [[https://github.com/MetroidIsPrettyCool/i68soyuz][here]].
 
@@ -65,7 +65,7 @@ am American, and ~i68apollo~ is the "local" component of ~i68~, I named it after
 * Footnotes
 [fn:4] Now something of a misnomer, following the successful to port to the z80-based TI-83 Plus.
 
-[fn:3]https://www.youtube.com/watch?v=urcL86UpqZc&t=472s
+[fn:3] https://www.youtube.com/watch?v=urcL86UpqZc&t=472s
 
 [fn:2] If you don't know how to use the terminal, then I'm sorry but this might be little over your head. For what it's
 worth, you probably don't really want to run this anyway. It's hacky and gross and brittle and obtuse and unpleasant to
