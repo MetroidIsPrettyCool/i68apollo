@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use debug_print::debug_eprintln;
+use ti83p::TI83Plus;
 use ti89::TI89;
 use ti92p::TI92Plus;
 
@@ -8,6 +9,7 @@ use crate::{cable::Cable, keyboard::CalcKey};
 
 pub mod ti92p;
 pub mod ti89;
+pub mod ti83p;
 
 pub trait CalcHandle {
     fn get_keys(&mut self, cable: &mut Cable) -> Vec<(CalcKey, bool)>;
@@ -66,6 +68,7 @@ impl I68MetaInfo {
         let calc_handle: Box<dyn CalcHandle> = match machine_id {
             192 => Box::new(TI92Plus::new()),
             089 => Box::new(TI89::new()),
+            183 => Box::new(TI83Plus::new()),
             _ => {
                 return Err(HandshakeError::UnknownMachineId(machine_id));
             }

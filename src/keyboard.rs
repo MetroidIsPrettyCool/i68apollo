@@ -92,7 +92,16 @@ pub enum CalcKey {
     CATLG,
     HOME,
     Bar,
-    EE
+    EE,
+    VARS,
+    STAT,
+    PRGM,
+    XCommaTCommaThetaCommaN,
+    MATH,
+    Inverse,
+    Square,
+    LOG,
+    DEL
 }
 
 #[derive(Debug)]
@@ -254,5 +263,14 @@ fn map_key_to_key(key: &CalcKey) -> Keyboard {
         CalcKey::HOME => Keyboard::Key(Key::Home),
         CalcKey::Bar => Keyboard::Key(Key::BackSlash),
         CalcKey::EE => Keyboard::Key(Key::E),
+        CalcKey::VARS => Keyboard::Key(Key::F13),
+        CalcKey::STAT => Keyboard::Key(Key::F12),
+        CalcKey::PRGM => Keyboard::Key(Key::F11),
+        CalcKey::XCommaTCommaThetaCommaN => Keyboard::Key(Key::X),
+        CalcKey::MATH => Keyboard::Key(Key::F10),
+        CalcKey::Inverse => Keyboard::Key(Key::Minus),
+        CalcKey::Square => Keyboard::Key(Key::_2),
+        CalcKey::LOG  => Keyboard::Key(Key::F9),
+        CalcKey::DEL => Keyboard::Key(Key::Delete)
     }
 }
