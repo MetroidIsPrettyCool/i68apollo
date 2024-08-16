@@ -118,7 +118,7 @@ fn init_calc(cable: &mut Cable) -> Result<I68MetaInfo, ()> {
     return Ok(i68_config);
 }
 
-fn main() {
+fn main() -> Result<(), ()> {
     // ---------------startup message---------------
 
     let (apollo_ver_major, apollo_ver_minor, apollo_ver_patch) = apollo_version();
@@ -130,26 +130,11 @@ fn main() {
 
     // ---------------init---------------
 
-    let mut cable = match init_cable() {
-        Ok(cable) => cable,
-        Err(_) => {
-            return;
-        }
-    };
+    let mut cable = init_cable()?;
 
-    let mut virtual_kbd = match init_vkbd() {
-        Ok(vkbd) => vkbd,
-        Err(_) => {
-            return;
-        }
-    };
+    let mut virtual_kbd = init_vkbd()?;
 
-    let calc = match init_calc(&mut cable) {
-        Ok(calc) => calc,
-        Err(_) => {
-            return;
-        }
-    };
+    let calc = init_calc(&mut cable)?;
 
     // ---------------main loop---------------
 
@@ -171,4 +156,6 @@ fn main() {
         "overreads: {}, malformed reads: {}",
         cable.stat_overreads, cable.stat_malformed_reads
     );
+
+    Ok(())
 }
