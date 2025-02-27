@@ -76,7 +76,6 @@ fn init_vkbd() -> Result<VirtualKeyboard, ()> {
 }
 
 fn init_calc(cable: &mut Cable) -> Result<I68MetaInfo, ()> {
-    println!("Press any key on calculator to continue");
     eprintln!("Waiting for handshake...");
 
     let i68_config = match I68MetaInfo::handshake(cable) {

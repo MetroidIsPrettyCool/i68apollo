@@ -18,11 +18,7 @@ const TI89_TI89TI_OS_MACHINE_ID: u8 = 0x98;
 // TMP LOCATION
 fn write_key(command: [u8; 4], cable: &mut Cable, response_length: usize) {
     cable.write_bytes(&command, Duration::from_secs(1)).unwrap();
-    let foo = cable.read_bytes(response_length, Duration::from_secs(1)).unwrap();
-    for byte in foo {
-        debug_eprint!("{:02X} ", byte);
-    }
-    debug_eprintln!("");
+    let _ = cable.read_bytes(response_length, Duration::from_secs(1)).unwrap();
 }
 
 pub trait CalcHandle {
@@ -38,7 +34,7 @@ pub enum HandshakeError {
 
 pub struct I68MetaInfo {
     pub soyuz_ver: (u8, u8, u8),
-    pub machine_id: u8,
+    pub soyuz_machine_id: u8,
     pub calc_handle: Box<dyn CalcHandle>,
 }
 impl I68MetaInfo {
@@ -46,10 +42,19 @@ impl I68MetaInfo {
         let (apollo_ver_major, apollo_ver_minor, apollo_ver_patch) = apollo_version();
 
         // probe calculator for OS machine ID and ready status
+
+        debug_eprintln!("calc: probing for architecture...");
+
         cable.write_bytes(&[0x00, 0x68, 0x00, 0x00], Duration::from_secs(1)).unwrap();
         let probe_result = cable.read_bytes(4, Duration::from_secs(1)).unwrap();
 
-        // TODO: check if read, else loop
+        debug_eprintln!("calc: os machine id: {:02x}h", probe_result[0]);
+
+        // TODO: check if ready, else loop
+
+        // remotely command the calculator to start soyuz
+
+        debug_eprintln!("calc: remotely commanding soyuz to start...");
 
         match probe_result[0] {
             TI83P_TI84P_OS_MACHINE_ID => {
@@ -131,11 +136,13 @@ impl I68MetaInfo {
             }
         }
 
+        debug_eprintln!("calc: attempting metadata exchange with local component...");
+
         // version check
 
         let soyuz_ver = cable.read_bytes(3, Duration::from_secs(5)).unwrap();
 
-        debug_eprintln!("soyuz ver: {:?}", soyuz_ver);
+        debug_eprintln!("calc: soyuz ver: {:?}", soyuz_ver);
 
         let apollo_ver: [u8; 3] = [apollo_ver_major, apollo_ver_minor, apollo_ver_patch];
         cable.write_bytes(&apollo_ver, Duration::from_secs(0)).unwrap();
@@ -154,21 +161,21 @@ impl I68MetaInfo {
 
         // machine id
 
-        let machine_id = cable.read_bytes(1, Duration::from_secs(0)).unwrap()[0];
-        debug_eprintln!("machine id: {machine_id}");
+        let soyuz_machine_id = cable.read_bytes(1, Duration::from_secs(0)).unwrap()[0];
+        debug_eprintln!("calc: soyuz machine id: {soyuz_machine_id}");
 
-        let calc_handle: Box<dyn CalcHandle> = match machine_id {
+        let calc_handle: Box<dyn CalcHandle> = match soyuz_machine_id {
             192 => Box::new(TI92Plus::new()),
             089 => Box::new(TI89::new()),
             183 => Box::new(TI83Plus::new()),
             _ => {
-                return Err(HandshakeError::UnknownMachineId(machine_id));
+                return Err(HandshakeError::UnknownMachineId(soyuz_machine_id));
             }
         };
 
         Ok(I68MetaInfo {
             soyuz_ver: (soyuz_ver_major, soyuz_ver_minor, soyuz_ver_patch),
-            machine_id,
+            soyuz_machine_id,
             calc_handle,
         })
     }
