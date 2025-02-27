@@ -68,7 +68,7 @@ impl CalcHandle for TI83Plus {
     fn get_keys(&mut self, cable: &mut Cable) -> Vec<(crate::keyboard::CalcKey, bool)> {
         self.prev_key_matrix.clone_from_slice(&self.key_matrix);
         self.key_matrix
-            .copy_from_slice(&cable.read_bytes(KEY_MATRIX_LEN, Duration::from_secs(0)));
+            .copy_from_slice(&cable.read_bytes(KEY_MATRIX_LEN, Duration::from_secs(0)).unwrap());
 
         let mut keys = Vec::new();
 

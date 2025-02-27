@@ -70,30 +70,34 @@ impl Cable {
         })
     }
 
-    pub fn read_bytes(&mut self, bytes_expected: usize, timeout: Duration) -> Vec<u8> {
+    // TODO: Rewrite with buffer reader
+    pub fn read_bytes(&mut self, bytes_expected: usize, timeout: Duration) -> Result<Vec<u8>, ()> {
         while self.byte_buffer.len() < bytes_expected {
             let mut buf: [u8; 512] = [0; 512]; // the cable /advertises/ that the max packet size is 32 bytes. This is apparently a lie.
             let read_size = self
                 .handle
-                .read_bulk(READ_ENDPOINT, &mut buf, timeout)
-                .unwrap();
+                .read_bulk(READ_ENDPOINT, &mut buf, timeout);
+
+            if let Err(_) = read_size {
+                return Err(());
+            }
+            let read_size = read_size.unwrap();
 
             self.stat_bytes_read_overall += read_size;
 
             self.byte_buffer.extend_from_slice(&buf[0..read_size]);
         }
 
-        return self
+        return Ok(self
             .byte_buffer
             .drain(0..bytes_expected)
-            .collect::<Vec<u8>>();
+            .collect::<Vec<u8>>());
     }
 
-    pub fn write_bytes(&mut self, bytes: &[u8], timeout: Duration) {
-        let _bytes_written = self
+    pub fn write_bytes(&mut self, bytes: &[u8], timeout: Duration) -> Result<usize, rusb::Error>{
+        self
             .handle
             .write_bulk(WRITE_ENDPOINT, bytes, timeout)
-            .unwrap();
     }
 
     pub fn release(&mut self) -> rusb::Result<()> {
